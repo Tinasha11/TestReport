@@ -5,6 +5,7 @@
     <title>任務回報模板產生器</title>
 
     <style>
+        /* ====== 基本頁面樣式 ====== */
         body {
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             background-color: #f5f5f5;
@@ -22,27 +23,27 @@
         }
 
         h1 {
-            margin-top: 0;
             text-align: center;
+            margin: 0 0 1.2rem 0;
             font-size: 1.6rem;
-            margin-bottom: 1.2rem;
         }
 
         h2 {
             font-size: 1.1rem;
             border-left: 4px solid #4a90e2;
             padding-left: 8px;
-            margin-top: 1.5rem;
-            margin-bottom: 0.8rem;
+            margin: 1.5rem 0 .8rem 0;
         }
 
-        .section {
-            margin-bottom: 1.5rem;
-            padding: 10px 12px 14px;
-            border-radius: 8px;
+        .section,
+        .title-section {
             background-color: #fafafa;
+            padding: 12px 14px 16px;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
         }
 
+        /* ====== 表單列 ====== */
         .form-row {
             display: flex;
             align-items: center;
@@ -60,21 +61,16 @@
             font-weight: 500;
         }
 
-        .form-row input[type="text"],
-        .form-row input[type="date"],
-        .form-row select,
+        /* ====== 基本 input 樣式 ====== */
+        input[type="text"],
+        input[type="date"],
+        select,
         textarea {
             font-size: 0.95rem;
             padding: 6px 8px;
             border-radius: 6px;
             border: 1px solid #ccc;
             box-sizing: border-box;
-        }
-
-        .form-row input[type="text"],
-        .form-row input[type="date"],
-        .form-row select {
-            flex: 1;
         }
 
         textarea {
@@ -82,29 +78,20 @@
             resize: vertical;
         }
 
-        .slash {
-            margin: 0 4px;
-        }
-
+        /* ====== 富文字編輯器 ====== */
         .rich-editor {
             width: 100%;
-            box-sizing: border-box;
             border-radius: 6px;
             border: 1px solid #ccc;
             padding: 6px 8px;
-            font-size: 0.95rem;
             background-color: #fff;
             overflow-y: auto;
+            font-size: .95rem;
         }
+        .rich-editor.large { min-height: 140px; }
+        .rich-editor.medium { min-height: 80px; }
 
-        .rich-editor.large {
-            min-height: 140px;
-        }
-
-        .rich-editor.medium {
-            min-height: 80px;
-        }
-
+        /* ====== autocomplete wrapper ====== */
         .autocomplete-wrapper {
             position: relative;
             flex: 1;
@@ -113,33 +100,23 @@
         .suggestions {
             position: absolute;
             top: 100%;
-            left: 0;
-            right: 0;
-            background: #ffffff;
+            left: 0; right: 0;
+            background: #fff;
             border: 1px solid #ccc;
             border-radius: 6px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.08);
             max-height: 200px;
             overflow-y: auto;
-            z-index: 50;
             display: none;
+            z-index: 50;
         }
 
         .suggestion-item {
             padding: 6px 8px;
             cursor: pointer;
         }
-
         .suggestion-item:hover {
             background-color: #e6f2ff;
-        }
-
-        /* ⭐ 新增標題區樣式 */
-        .title-section {
-            margin-bottom: 1.5rem;
-            padding: 10px 12px 14px;
-            border-radius: 8px;
-            background-color: #fafafa;
         }
 
         #title-preview {
@@ -147,8 +124,6 @@
             padding: 6px 8px;
             border-radius: 6px;
             border: 1px solid #ccc;
-            font-size: 0.95rem;
-            box-sizing: border-box;
             margin-bottom: 10px;
         }
 
@@ -158,18 +133,61 @@
             border-radius: 8px;
             border: 1px solid #ccc;
             font-family: "Courier New", monospace;
-            font-size: 0.9rem;
-            box-sizing: border-box;
             background-color: #fdfdfd;
         }
 
-        /* ⭐ 從舊版完整移植的按鈕設計 */
-        .button-row {
-            text-align: center;
-            margin-top: 1rem;
+        /* ====== 裝置欄位（保持原樣） ====== */
+        .device-row {
+            display: grid;
+            grid-template-columns: 120px 300px 300px;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #pc-row {
+            grid-template-columns: 120px 300px;
+        }
+
+        #ios-row {
+            grid-template-columns: 120px 300px;
+        }
+
+        #ios-browser-wrapper {
+            margin-left: 120px !important;
             display: flex;
-            gap: 10px;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .ios-browser-group .device-row {
+            display: grid;
+            grid-template-columns: 120px 200px;
+        }
+
+        .ios-extra-row {
+            display: grid;
+            grid-template-columns: 120px 200px 200px;
+            gap: 8px;
+        }
+
+        #ios-safari-version,
+        #ios-chrome-version,
+        #ios-other-name,
+        #ios-other-version {
+            width: 200px !important;
+        }
+
+        /* ====== 問題描述放大 ====== */
+        #problem-desc {
+            width: 100% !important;
+        }
+
+        /* ====== 按鈕 ====== */
+        .button-row {
+            display: flex;
             justify-content: center;
+            gap: 10px;
+            margin-top: 1rem;
         }
 
         button {
@@ -179,63 +197,68 @@
             cursor: pointer;
             font-size: 0.95rem;
             background-color: #4a90e2;
-            color: #ffffff;
+            color: white;
         }
-
         button:hover {
             background-color: #357bd8;
         }
     </style>
 </head>
-<body>
+<body autocomplete="off">
 <div class="container">
     <h1>任務回報模板產生器</h1>
 
-    <!-- ⭐ 任務標題區塊 -->
+    <!-- 任務標題 -->
     <div class="title-section">
         <h2>任務標題</h2>
 
+        <!-- 遊戲 -->
         <div class="form-row">
             <label>遊戲：</label>
             <div class="autocomplete-wrapper">
-                <input type="text" id="game-select" placeholder="搜尋遊戲（GameID 或名稱）">
+                <input type="text" id="game-select" autocomplete="new-password" name="nohistory-game"
+                    placeholder="搜尋遊戲（GameID 或名稱）">
                 <div class="suggestions" id="game-suggestions"></div>
             </div>
         </div>
 
+        <!-- 問題描述 -->
         <div class="form-row">
             <label>問題描述：</label>
-            <input type="text" id="problem-desc" placeholder="簡述本次問題">
+            <input type="text" id="problem-desc" autocomplete="new-password" name="nohistory-desc"
+                placeholder="簡述本次問題">
         </div>
     </div>
 
-    <!-- ⭐ 基本資訊 -->
+    <!-- 基本資訊 -->
     <div class="section">
         <h2>基本資訊</h2>
 
         <div class="form-row">
-            <label for="incident_date">發生時間：</label>
-            <input type="date" id="incident_date" required />
+            <label>發生時間：</label>
+            <input type="date" id="incident_date" autocomplete="new-password" name="nohistory-date">
         </div>
 
         <div class="form-row">
-            <label for="tester">測試者：</label>
+            <label>測試者：</label>
             <div class="autocomplete-wrapper">
-                <input type="text" id="tester" class="memory-input" data-memory-key="tester">
+                <input type="text" id="tester" class="memory-input"
+                    data-memory-key="tester" autocomplete="new-password" name="nohistory-tester">
                 <div class="suggestions"></div>
             </div>
         </div>
 
         <div class="form-row">
-            <label for="version">版本：</label>
+            <label>版本：</label>
             <div class="autocomplete-wrapper">
-                <input type="text" id="version" class="memory-input" data-memory-key="version">
+                <input type="text" id="version" class="memory-input"
+                    data-memory-key="version" autocomplete="new-password" name="nohistory-version">
                 <div class="suggestions"></div>
             </div>
         </div>
 
         <div class="form-row">
-            <label for="site">站別：</label>
+            <label>站別：</label>
             <select id="site">
                 <option value="QA站">QA站</option>
                 <option value="PROD站">PROD站</option>
@@ -249,325 +272,424 @@
                 <option value="Tidy遊戲級距測試廳">Tidy遊戲級距測試廳</option>
                 <option value="DB TEST">DB TEST</option>
             </select>
-
             <span class="slash">/</span>
-
             <div class="autocomplete-wrapper inline">
-                <input type="text" id="account" class="memory-input" data-memory-key="account">
+                <input type="text" id="account" class="memory-input" autocomplete="new-password"
+                    name="nohistory-account" data-memory-key="account">
                 <div class="suggestions"></div>
             </div>
         </div>
 
+        <!-- 裝置 -->
         <div class="form-row">
-            <label for="device">裝置：</label>
-            <select id="device">
-                <option value="PC">PC</option>
-                <option value="Android">Android</option>
-                <option value="iOS">iOS</option>
-            </select>
+            <label>裝置：</label>
 
-            <div id="ios-browser-wrapper" class="ios-browser-wrapper" style="display:none;">
-                <span class="slash">/</span>
-                <select id="ios_browser">
-                    <option value="Chrome">Chrome</option>
-                    <option value="Safari">Safari</option>
-                </select>
+            <div class="device-group">
+                <!-- PC -->
+                <div class="device-row" id="pc-row">
+                    <label><input type="checkbox" class="device-check"
+                        value="PC" id="device-pc"> PC</label>
+                    <input type="text" id="pc-browser" autocomplete="new-password" name="nohistory-pcb"
+                        class="browser-input" placeholder="瀏覽器版本（例：Chrome 120）">
+                </div>
+
+                <!-- Android -->
+                <div class="device-row">
+                    <label><input type="checkbox" class="device-check"
+                        value="Android" id="device-android"> Android</label>
+                    <input type="text" id="android-os" autocomplete="new-password" name="nohistory-aos"
+                        class="os-input" placeholder="例：13">
+                    <input type="text" id="android-browser" autocomplete="new-password" name="nohistory-ab"
+                        class="browser-input" placeholder="瀏覽器版本（例：Chrome 118）">
+                </div>
+
+                <!-- iOS -->
+                <div class="device-row" id="ios-row">
+                    <label><input type="checkbox" class="device-check"
+                        value="iOS" id="ios-check"> iOS</label>
+                    <input type="text" id="ios-os" autocomplete="new-password" name="nohistory-ios"
+                        class="os-input" placeholder="例：16.4">
+                </div>
+            </div>
+        </div>
+
+        <!-- iOS 子欄位 -->
+        <div class="form-row" id="ios-browser-wrapper" style="display:none;">
+            <div class="ios-browser-group">
+
+                <div class="device-row">
+                    <label><input type="checkbox" class="ios-browser" id="ios-safari">
+                        Safari</label>
+                    <input type="text" id="ios-safari-version" autocomplete="new-password" name="nohistory-isv"
+                        class="browser-version-input" placeholder="例：16.4">
+                </div>
+
+                <div class="device-row">
+                    <label><input type="checkbox" class="ios-browser" id="ios-chrome">
+                        Chrome</label>
+                    <input type="text" id="ios-chrome-version" autocomplete="new-password" name="nohistory-icv"
+                        class="browser-version-input" placeholder="例：120.1">
+                </div>
+
+                <div class="ios-extra-row">
+                    <label>其他：</label>
+                    <input type="text" id="ios-other-name" autocomplete="new-password" name="nohistory-ion"
+                        class="browser-name-input" placeholder="瀏覽器（例：Edge）">
+                    <input type="text" id="ios-other-version" autocomplete="new-password" name="nohistory-iov"
+                        class="browser-version-input" placeholder="例：121.0">
+                </div>
+
             </div>
         </div>
 
         <div class="form-row">
-            <label for="order_id">注單編號：</label>
-            <input type="text" id="order_id">
+            <label>注單編號：</label>
+            <input type="text" id="order_id" autocomplete="new-password" name="nohistory-order">
         </div>
     </div>
 
-    <!-- ⭐ 描述內容（可貼圖片） -->
+    <!-- 描述內容 -->
     <div class="section">
         <h2>描述內容（可貼圖片）</h2>
 
         <div class="form-row vertical">
             <label>操作：</label>
-            <div id="operation_editor" class="rich-editor large" contenteditable="true"></div>
+            <div id="operation_editor" class="rich-editor large"
+                contenteditable="true"></div>
         </div>
 
         <div class="form-row vertical">
             <label>實際結果：</label>
-            <div id="actual_editor" class="rich-editor large" contenteditable="true"></div>
+            <div id="actual_editor" class="rich-editor large"
+                contenteditable="true"></div>
         </div>
 
         <div class="form-row vertical">
             <label>預期結果：</label>
-            <div id="expected_editor" class="rich-editor large" contenteditable="true"></div>
+            <div id="expected_editor" class="rich-editor large"
+                contenteditable="true"></div>
         </div>
 
         <div class="form-row vertical">
             <label>備註：</label>
-            <div id="remark_editor" class="rich-editor medium" contenteditable="true"></div>
+            <div id="remark_editor" class="rich-editor medium"
+                contenteditable="true"></div>
         </div>
     </div>
 
-    <!-- ⭐ 按鈕列（使用舊版 UI） -->
+    <!-- 按鈕 -->
     <div class="button-row">
-        <button type="button" id="copy-title-btn">複製標題</button>
-        <button type="button" id="copy-btn">一鍵複製</button>
+        <button id="copy-title-btn">複製標題</button>
+        <button id="copy-btn">一鍵複製</button>
     </div>
 
-    <!-- ⭐ 新版：小框 + 大框預覽 -->
-    <div class="section output-section">
+    <!-- 預覽 -->
+    <div class="section">
         <h2>文字預覽</h2>
-
-        <input type="text" id="title-preview" readonly />
-        <textarea id="full-preview" readonly rows="16"></textarea>
+        <input type="text" id="title-preview" readonly>
+        <textarea id="full-preview" rows="16" readonly></textarea>
     </div>
-
-</div> <!-- END container -->
+</div>
+<!-- ===================== JS ======================= -->
 <script>
-/* -------------------------------------------
-   自動填現在日期
-------------------------------------------- */
-function setToday() {
-    const d = document.getElementById("incident_date");
-    const today = new Date().toISOString().split("T")[0];
-    d.value = today;
+/* 設定今日日期 */
+function setToday(){
+    const d=document.getElementById("incident_date");
+    d.value=new Date().toISOString().split("T")[0];
 }
 
-/* -------------------------------------------
-   遊戲列表
-------------------------------------------- */
-const gameList = [
-    ["Game101","瘋狂實驗室"],["Game102","開運金獅"],["Game103","星際冒險"],
-    ["Game104","精靈奇園"],["Game105","功夫高手"],["Game106","淘金樂"],
-    ["Game107","國王的祕寶"],["Game108","南極世界"],["Game109","荒野大西部"],
-    ["Game110","超級猴子"],["Game111","刺客密令"],["Game112","白蛇傳"],
-    ["Game113","美味一番"],["Game114","幸運派翠克"],["Game115","魚蝦蟹 slot"],
-    ["Game116","叱吒西遊"],["Game117","鬥士傳奇"],["Game118","小紅帽:送餐大作戰"],
-    ["Game119","威震公堂"],["Game120","魔法學園"],["Game122","發大柴"],
-    ["Game139","金福瑞獸"],["Game123","巨獸金剛"],["Game124","刮刮樂"],
-    ["Game125","奇門遁甲"],["Game126","泰濕控"],["Game127","暹羅神拳"],
-    ["Game128","哥布林礦坑"],["Game129","湖中女神"],["Game130","古墓驚魂"],
-    ["Game131","絕世神偷"],["Game132","羅摩衍那"],["Game133","骰寶"],
-    ["Game134","百家樂"],["Game135","5PK"],["Game136","水果樂園"],
-    ["Game137","遠古生物"],["Game138","魔豆"],["Game121","21點"],
-    ["Game140","神醫百草傳"],["Game141","龍宮寶藏"],["Game142","維京傳奇"],
-    ["Game143","大笑彌勒"],["Game144","日輪寶殿"],["Game145","要塞爭奪戰"],
-    ["Game146","永恆之吻"],["Game147","龍門試練"],["Game148","非洲獅王"],
-    ["Game149","迎財神"],["Game150","撒哈拉奇緣"],["Game151","牛牛娶親"],
-    ["Game152","金牛發發發"],["Game153","馬雅末日"],["Game154","野性的渴望"],
-    ["Game155","搗蛋好來屋"],["Game156","招財聚寶"],["Game157","加勒比奇航"],
-    ["Game158","伯利恆之星"],["Game159","添運財神"],["Game160","三國群雄"],
-    ["Game161","JP麻將胡了"],["Game162","敲吉鼠"],["Game163","786 SLOT"],
-    ["Game164","龍珠 ‧ 天命"],["Game165","刮刮樂2 龍耀無限"],
-    ["Game166","刮刮樂3 羊羊derE"],["Game167","埃及祕寶"],["Game168","擊鼓迎福"],
-    ["Game169","EDM迷幻"],["Game170","四象拱財"],["Game171","巫毒傳說"],
-    ["Game172","花開富貴"],["Game173","速度與激情"],["Game174","花式5PK"],
-    ["Game175","福虎臨門"],["Game176","超級射門"],["Game177","DICE"],
-    ["Game178","鳳凰傳說"],["Game179","伊甸王座"],["Game180","電音兔兔"],
-    ["Game181","吐鈔機"],["Game182","迎財神 2"],["Game183","添運財神2"],
-    ["Game184","黃金麻將"],["Game185","金銀鯉"],["Game186","星海征戰"],
-    ["Game187","轟蜜大作戰"],["Game188","烽起雲湧時"],["Game189","海洋物語"],
-    ["Game190","命運之手"],["Game191","爆焰足球"],["Game192","好運金蟾"],
-    ["Game193","F.T.G榮耀前線"],["Game194","拉密"],["Game195","武神趙子龍"],
-    ["Game196","牛轉錢坤"],["Game197","東郊皇陵"],["Game198","武聖關羽"],
-    ["Game199","惡魔甜心"],["Game200","天使寶貝"],["Game201","JP麻將胡了2"],
-    ["Game202","星爆宇宙"],["Game203","點蛇成金"],["Game204","封神傳奇"],
-    ["Game205","開門大吉"],["Game206","牛轉錢坤2"],["Game207","虎嘯龍吟"],
-    ["Game208","射龍門"],["Game209","添運財神3"],["Game210","皇家老虎機"],
-    ["Game211","財神妙"],["Game212","Lucky Guess"],["Game213","金豪鯉"],
-    ["Game214","賽馬娘"],["Game215","X型連爆中式"]
-];
+/* 遊戲清單 */
+const gameList=[["Game101","瘋狂實驗室"],["Game102","開運金獅"],["Game103","星際冒險"],
+["Game104","精靈奇園"],["Game105","功夫高手"],["Game106","淘金樂"],["Game107","國王的祕寶"],
+["Game108","南極世界"],["Game109","荒野大西部"],["Game110","超級猴子"],["Game111","刺客密令"],
+["Game112","白蛇傳"],["Game113","美味一番"],["Game114","幸運派翠克"],["Game115","魚蝦蟹 slot"],
+["Game116","叱吒西遊"],["Game117","鬥士傳奇"],["Game118","小紅帽:送餐大作戰"],["Game119","威震公堂"],
+["Game120","魔法學園"],["Game122","發大柴"],["Game139","金福瑞獸"],["Game123","巨獸金剛"],
+["Game124","刮刮樂"],["Game125","奇門遁甲"],["Game126","泰濕控"],["Game127","暹羅神拳"],
+["Game128","哥布林礦坑"],["Game129","湖中女神"],["Game130","古墓驚魂"],["Game131","絕世神偷"],
+["Game132","羅摩衍那"],["Game133","骰寶"],["Game134","百家樂"],["Game135","5PK"],
+["Game136","水果樂園"],["Game137","遠古生物"],["Game138","魔豆"],["Game121","21點"],
+["Game140","神醫百草傳"],["Game141","龍宮寶藏"],["Game142","維京傳奇"],["Game143","大笑彌勒"],
+["Game144","日輪寶殿"],["Game145","要塞爭奪戰"],["Game146","永恆之吻"],["Game147","龍門試練"],
+["Game148","非洲獅王"],["Game149","迎財神"],["Game150","撒哈拉奇緣"],["Game151","牛牛娶親"],
+["Game152","金牛發發發"],["Game153","馬雅末日"],["Game154","野性的渴望"],["Game155","搗蛋好來屋"],
+["Game156","招財聚寶"],["Game157","加勒比奇航"],["Game158","伯利恆之星"],["Game159","添運財神"],
+["Game160","三國群雄"],["Game161","JP麻將胡了"],["Game162","敲吉鼠"],["Game163","786 SLOT"],
+["Game164","龍珠 ‧ 天命"],["Game165","刮刮樂2 龍耀無限"],["Game166","刮刮樂3 羊羊derE"],
+["Game167","埃及祕寶"],["Game168","擊鼓迎福"],["Game169","EDM迷幻"],["Game170","四象拱財"],
+["Game171","巫毒傳說"],["Game172","花開富貴"],["Game173","速度與激情"],["Game174","花式5PK"],
+["Game175","福虎臨門"],["Game176","超級射門"],["Game177","DICE"],["Game178","鳳凰傳說"],
+["Game179","伊甸王座"],["Game180","電音兔兔"],["Game181","吐鈔機"],["Game182","迎財神 2"],
+["Game183","添運財神2"],["Game184","黃金麻將"],["Game185","金銀鯉"],["Game186","星海征戰"],
+["Game187","轟蜜大作戰"],["Game188","烽起雲湧時"],["Game189","海洋物語"],["Game190","命運之手"],
+["Game191","爆焰足球"],["Game192","好運金蟾"],["Game193","F.T.G榮耀前線"],["Game194","拉密"],
+["Game195","武神趙子龍"],["Game196","牛轉錢坤"],["Game197","東郊皇陵"],["Game198","武聖關羽"],
+["Game199","惡魔甜心"],["Game200","天使寶貝"],["Game201","JP麻將胡了2"],["Game202","星爆宇宙"],
+["Game203","點蛇成金"],["Game204","封神傳奇"],["Game205","開門大吉"],["Game206","牛轉錢坤2"],
+["Game207","虎嘯龍吟"],["Game208","射龍門"],["Game209","添運財神3"],["Game210","皇家老虎機"],
+["Game211","財神妙"],["Game212","Lucky Guess"],["Game213","金豪鯉"],["Game214","賽馬娘"],
+["Game215","X型連爆中式"]];
 
-/* -------------------------------------------
-   遊戲搜尋列表互動
-------------------------------------------- */
-const gameInput = document.getElementById("game-select");
-const gameSuggest = document.getElementById("game-suggestions");
+/* --- autocomplete 遊戲搜尋 --- */
+const gameInput=document.getElementById("game-select");
+const gameSuggest=document.getElementById("game-suggestions");
 
-function renderGameList(keyword = "") {
-    const kw = keyword.trim().toLowerCase();
-    gameSuggest.innerHTML = "";
+function renderGameList(keyword=""){
+    const kw=keyword.toLowerCase();
+    gameSuggest.innerHTML="";
 
-    const matches = gameList.filter(([id, name]) =>
+    const matches=gameList.filter(([id,name]) =>
         id.toLowerCase().includes(kw) || name.toLowerCase().includes(kw)
     );
 
-    matches.forEach(([id, name]) => {
-        const div = document.createElement("div");
-        div.className = "suggestion-item";
-        div.textContent = `${id} ${name}`;
-        div.addEventListener("mousedown", () => {
-            gameInput.value = `${id} ${name}`;
-            gameSuggest.style.display = "none";
+    matches.forEach(([id,name])=>{
+        const div=document.createElement("div");
+        div.className="suggestion-item";
+        div.textContent=`${id} ${name}`;
+        div.addEventListener("mousedown",()=>{
+            gameInput.value=`${id} ${name}`;
+            gameSuggest.style.display="none";
             updateTitle();
         });
         gameSuggest.appendChild(div);
     });
 
-    gameSuggest.style.display = matches.length ? "block" : "none";
+    gameSuggest.style.display = matches.length ? "block":"none";
 }
 
-gameInput.addEventListener("focus", () => renderGameList(""));
-gameInput.addEventListener("input", () => renderGameList(gameInput.value));
-
-document.addEventListener("click", (e) => {
-    if (!gameInput.contains(e.target)) gameSuggest.style.display = "none";
+gameInput.addEventListener("focus",()=>renderGameList(""));
+gameInput.addEventListener("input",()=>renderGameList(gameInput.value));
+document.addEventListener("click",(e)=>{
+    if(!gameInput.contains(e.target)) gameSuggest.style.display="none";
 });
 
-/* -------------------------------------------
-   標題組合
-------------------------------------------- */
-function updateTitle() {
-    const full = gameInput.value.trim();
-    const desc = document.getElementById("problem-desc").value.trim();
-    let result = "";
+/* --- 標題生成 --- */
+function updateTitle(){
+    const full=gameInput.value.trim();
+    const desc=document.getElementById("problem-desc").value.trim();
+    let result="";
 
-    if (full) {
-        const parts = full.split(" ");
-        const id = parts[0];
-        const name = parts.slice(1).join(" ");
-        result = `【${id}】【${name}】${desc}`;
+    if(full){
+        const parts=full.split(" ");
+        const id=parts[0];
+        const name=parts.slice(1).join(" ");
+        result=`【${id}】【${name}】${desc}`;
     }
 
-    document.getElementById("title-preview").value = result;
+    document.getElementById("title-preview").value=result;
     updateFullPreview();
 }
+document.getElementById("problem-desc").addEventListener("input",updateTitle);
 
-document.getElementById("problem-desc").addEventListener("input", updateTitle);
-
-/* -------------------------------------------
-   全文預覽（包含標題以外部分）
-------------------------------------------- */
-function updateFullPreview() {
-    const date = document.getElementById("incident_date").value;
-    const tester = document.getElementById("tester").value;
-    const version = document.getElementById("version").value;
-    const site = document.getElementById("site").value;
-    const hall = document.getElementById("hall").value;
-    const account = document.getElementById("account").value;
-    const device = document.getElementById("device").value;
-    const iosBrowser = document.getElementById("ios_browser").value;
-    const order = document.getElementById("order_id").value;
-
-    const op = document.getElementById("operation_editor").innerText.trim();
-    const act = document.getElementById("actual_editor").innerText.trim();
-    const exp = document.getElementById("expected_editor").innerText.trim();
-    const remark = document.getElementById("remark_editor").innerText.trim();
-
-    let deviceLine = `裝置：${device}`;
-    if (device === "iOS") deviceLine += ` / ${iosBrowser}`;
-
-    const content = [
-        `發生時間：${date}`,
-        `測試者：${tester}`,
-        `版本：${version}`,
-        `站別：${site}`,
-        `測試廳主／帳號：${hall} / ${account}`,
-        deviceLine,
-        `注單編號：${order}`,
-        ``,
-        `操作：`,
-        op,
-        ``,
-        `實際結果：`,
-        act,
-        ``,
-        `預期結果：`,
-        exp,
-        ``,
-        `備註：`,
-        remark
-    ].join("\n");
-
-    document.getElementById("full-preview").value = content;
+/* --- 智能 OS 補字首 --- */
+function formatOS(prefix, value){
+    value = value.trim();
+    if (!value) return "";
+    return `${prefix} ${value}`;
 }
 
-/* -------------------------------------------
-   按鈕功能：複製
-------------------------------------------- */
-document.getElementById("copy-title-btn").addEventListener("click", () => {
+/* --- 智能瀏覽器判斷（PC / Android 共用） --- */
+function formatBrowser(value){
+    const v = value.trim();
+    if (!v) return "";
+
+    // 含非數字/小數點 → 視為自訂（可含中英文）
+    if (!/^[0-9.]+$/.test(v)){
+        return `瀏覽器：${v}`;
+    }
+    // 純數字 → 預設 Chrome
+    return `瀏覽器：Chrome ${v}`;
+}
+
+/* --- 裝置資料組裝（回傳每裝置一行字串） --- */
+function getDeviceLines(){
+    const list = [];
+
+    // PC
+    if (document.getElementById("device-pc").checked) {
+        const br = formatBrowser(document.getElementById("pc-browser").value);
+        let line = "．PC";
+        if (br) line += `（${br}）`;
+        list.push(line);
+    }
+
+    // Android
+    if (document.getElementById("device-android").checked) {
+        const os = formatOS("Android", document.getElementById("android-os").value);
+        const br = formatBrowser(document.getElementById("android-browser").value);
+
+        let line = "．Android";
+        if (os) line += `（${os}）`;
+        if (br) line += `（${br}）`;
+        list.push(line);
+    }
+
+    // iOS
+    if (document.getElementById("ios-check").checked) {
+        const os = formatOS("iOS", document.getElementById("ios-os").value);
+
+        const parts = [];
+        if (document.getElementById("ios-safari").checked) {
+            const v = document.getElementById("ios-safari-version").value.trim();
+            if (v) parts.push(`Safari ${v}`);
+        }
+        if (document.getElementById("ios-chrome").checked) {
+            const v = document.getElementById("ios-chrome-version").value.trim();
+            if (v) parts.push(`Chrome ${v}`);
+        }
+        const on = document.getElementById("ios-other-name").value.trim();
+        const ov = document.getElementById("ios-other-version").value.trim();
+        if (on) parts.push(ov ? `${on} ${ov}` : on);
+
+        let line = "．iOS";
+        if (os) line += `（${os}）`;
+        if (parts.length) line += `（瀏覽器：${parts.join("、")}）`;
+        list.push(line);
+    }
+
+    return list;
+}
+
+/* --- 預覽內容更新 --- */
+function updateFullPreview(){
+    const date=document.getElementById("incident_date").value;
+    const tester=document.getElementById("tester").value;
+    const version=document.getElementById("version").value;
+    const site=document.getElementById("site").value;
+    const hall=document.getElementById("hall").value;
+    const account=document.getElementById("account").value;
+    const order=document.getElementById("order_id").value;
+
+    const op=document.getElementById("operation_editor").innerText.trim();
+    const act=document.getElementById("actual_editor").innerText.trim();
+    const exp=document.getElementById("expected_editor").innerText.trim();
+    const remark=document.getElementById("remark_editor").innerText.trim();
+
+    const lines = [];
+    lines.push(`發生時間：${date}`);
+    lines.push(`測試者：${tester}`);
+    lines.push(`版本：${version}`);
+    lines.push(`站別：${site}`);
+    lines.push(`測試廳主／帳號：${hall} / ${account}`);
+
+    // 裝置區塊：標題一行，下面每裝置一行（有勾才顯示）
+    const deviceLines = getDeviceLines();
+    lines.push(`裝置：`);
+    deviceLines.forEach(l => lines.push(l));
+
+    lines.push(`注單編號：${order}`);
+    lines.push("");
+    lines.push("操作：");
+    lines.push(op);
+    lines.push("");
+    lines.push("實際結果：");
+    lines.push(act);
+    lines.push("");
+    lines.push("預期結果：");
+    lines.push(exp);
+    lines.push("");
+    lines.push("備註：");
+    lines.push(remark);
+
+    document.getElementById("full-preview").value = lines.join("\n");
+}
+
+/* --- 複製 --- */
+document.getElementById("copy-title-btn").addEventListener("click",()=>{
     navigator.clipboard.writeText(document.getElementById("title-preview").value);
     alert("標題已複製！");
 });
-
-document.getElementById("copy-btn").addEventListener("click", () => {
+document.getElementById("copy-btn").addEventListener("click",()=>{
     navigator.clipboard.writeText(document.getElementById("full-preview").value);
-    alert("全文已複製（不包含標題）！");
+    alert("全文已複製（不含標題）！");
 });
 
-/* -------------------------------------------
-   記憶 autocomplete
-------------------------------------------- */
-function loadMemory(key) {
-    try { return JSON.parse(localStorage.getItem(key)) || []; }
-    catch { return []; }
-}
+/* --- 自訂記憶 autocomplete --- */
+function loadMemory(key){ try{return JSON.parse(localStorage.getItem(key))||[]}catch{return[]} }
+function saveMemory(key,arr){ localStorage.setItem(key,JSON.stringify(arr)); }
 
-function saveMemory(key, arr) {
-    localStorage.setItem(key, JSON.stringify(arr));
-}
+function setupMemoryField(id,key){
+    const input=document.getElementById(id);
+    const wrap=input.closest(".autocomplete-wrapper");
+    const box=wrap.querySelector(".suggestions");
+    let list=loadMemory(key);
 
-function setupMemoryField(id, key) {
-    const input = document.getElementById(id);
-    const wrap = input.closest(".autocomplete-wrapper");
-    const box = wrap.querySelector(".suggestions");
-    let memory = loadMemory(key);
+    function render(filter=""){
+        const kw=filter.toLowerCase();
+        box.innerHTML="";
 
-    function render(filter = "") {
-        const kw = filter.toLowerCase();
-        box.innerHTML = "";
-        const list = memory.filter(v => v.toLowerCase().includes(kw));
-
-        list.forEach(v => {
-            const div = document.createElement("div");
-            div.className = "suggestion-item";
-            div.textContent = v;
-            div.addEventListener("mousedown", () => {
-                input.value = v;
-                box.style.display = "none";
+        const matches=list.filter(v=>v.toLowerCase().includes(kw));
+        matches.forEach(v=>{
+            const div=document.createElement("div");
+            div.className="suggestion-item";
+            div.textContent=v;
+            div.addEventListener("mousedown",()=>{
+                input.value=v;
+                box.style.display="none";
                 updateFullPreview();
             });
             box.appendChild(div);
         });
 
-        box.style.display = list.length ? "block" : "none";
+        box.style.display = matches.length ? "block":"none";
     }
 
-    input.addEventListener("focus", () => render(""));
-    input.addEventListener("input", () => render(input.value));
-    input.addEventListener("blur", () => {
-        const v = input.value.trim();
-        if (v && !memory.includes(v)) {
-            memory.push(v);
-            saveMemory(key, memory);
+    input.addEventListener("focus",()=>render(""));
+    input.addEventListener("input",()=>render(input.value));
+
+    input.addEventListener("blur",()=>{
+        const v=input.value.trim();
+        if(v && !list.includes(v)){
+            list.push(v);
+            saveMemory(key,list);
         }
-        setTimeout(() => box.style.display = "none", 150);
+        setTimeout(()=>box.style.display="none",120);
     });
 }
 
-/* -------------------------------------------
-   初始化
-------------------------------------------- */
-window.addEventListener("DOMContentLoaded", () => {
+/* --- 初始化 --- */
+window.addEventListener("DOMContentLoaded",()=>{
     setToday();
 
-    setupMemoryField("tester", "tester");
-    setupMemoryField("version", "version");
-    setupMemoryField("account", "account");
-
-    document.getElementById("device").addEventListener("change", () => {
-        document.getElementById("ios-browser-wrapper").style.display =
-            document.getElementById("device").value === "iOS" ? "inline-flex" : "none";
-        updateFullPreview();
-    });
-
-    ["incident_date","site","hall","order_id"]
-        .forEach(id => document.getElementById(id).addEventListener("input", updateFullPreview));
-
-    ["operation_editor","actual_editor","expected_editor","remark_editor"]
-        .forEach(id =>
-            document.getElementById(id).addEventListener("input", updateFullPreview)
-        );
+    setupMemoryField("tester","tester");
+    setupMemoryField("version","version");
+    setupMemoryField("account","account");
 
     updateFullPreview();
+
+    // 控制 iOS 子欄位顯示
+    document.querySelectorAll(".device-check").forEach(chk=>{
+        chk.addEventListener("change",()=>{
+            const ios=document.getElementById("ios-check").checked;
+            document.getElementById("ios-browser-wrapper").style.display = ios ? "flex" : "none";
+            updateFullPreview();
+        });
+    });
+
+    // iOS 子瀏覽器更新
+    document.querySelectorAll(".ios-browser").forEach(chk=>{
+        chk.addEventListener("change",updateFullPreview);
+    });
+
+    // 基本欄位
+    [
+        "incident_date","site","hall","order_id",
+        "operation_editor","actual_editor","expected_editor","remark_editor"
+    ].forEach(id=>{
+        document.getElementById(id).addEventListener("input",updateFullPreview);
+    });
+
+    // 裝置欄位
+    [
+        "pc-browser",
+        "android-os","android-browser",
+        "ios-os",
+        "ios-safari-version","ios-chrome-version",
+        "ios-other-name","ios-other-version"
+    ].forEach(id=>{
+        const el=document.getElementById(id);
+        if(el) el.addEventListener("input",updateFullPreview);
+    });
 });
 </script>
 
