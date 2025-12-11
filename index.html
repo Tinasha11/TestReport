@@ -241,7 +241,7 @@ select option[disabled]{display:none;}
             <label>遊戲：</label>
             <div class="autocomplete-wrapper">
                 <input type="text" id="game-select" autocomplete="new-password" name="nohistory-game"
-                    placeholder="搜尋遊戲（GameID 或名稱）">
+                    style="width: 345px;" placeholder="搜尋遊戲（GameID 或名稱），若無需使用可留白">
                 <div class="suggestions" id="game-suggestions"></div>
             </div>
         </div>
@@ -297,8 +297,10 @@ select option[disabled]{display:none;}
         <div class="form-row">
             <label>站別：</label>
             <select id="site">
-                <option value="QA站">QA站</option>
-                <option value="PROD站">PROD站</option>
+                <option value="測試站">測試站</option>
+                <option value="正式站">正式站</option>
+                <option value="開發站">開發站</option>
+                <option value="試玩模式">試玩模式</option>
             </select>
         </div>
 
@@ -481,6 +483,18 @@ function renderGameList(keyword=""){
         id.toLowerCase().includes(kw) || name.toLowerCase().includes(kw)
     );
 
+    
+    // 加入一個空白選項
+    const blankDiv = document.createElement("div");
+    blankDiv.className = "suggestion-item";
+    blankDiv.textContent = "(清除選擇)";
+        blankDiv.addEventListener("mousedown", () => {
+        gameInput.value = "";
+        gameSuggest.style.display = "none";
+        updateTitle();
+    });
+    gameSuggest.appendChild(blankDiv);
+
     matches.forEach(([id,name])=>{
         const div=document.createElement("div");
         div.className="suggestion-item";
@@ -497,7 +511,10 @@ function renderGameList(keyword=""){
 }
 
 gameInput.addEventListener("focus",()=>renderGameList(""));
-gameInput.addEventListener("input",()=>renderGameList(gameInput.value));
+gameInput.addEventListener("input",()=>{
+    renderGameList(gameInput.value);
+    updateTitle();
+});
 document.addEventListener("click",(e)=>{
     if(!gameInput.contains(e.target)) gameSuggest.style.display="none";
 });
@@ -508,11 +525,13 @@ function updateTitle(){
     const desc=document.getElementById("problem-desc").value.trim();
     let result="";
 
-    if(full){
-        const parts=full.split(" ");
-        const id=parts[0].replace('Game','');
-        const name=parts.slice(1).join(" ");
-        result=`${id}_${name}_${desc}`;
+    if (full) {
+        const parts = full.split(" ");
+        const id = parts[0].replace('Game', '');
+        const name = parts.slice(1).join(" ");
+        result = `${id}_${name}_${desc}`;
+    } else if (desc) {
+        result = desc;
     }
 
     document.getElementById("title-preview").value=result;
@@ -614,7 +633,11 @@ function updateFullPreview(){
     if(bugLvl){ lines.push(`BUG 等級：${bugLvl}（${bugD}）`); }
     lines.push(`版本：${version}`);
     lines.push(`站別：${site}`);
-    lines.push(`測試廳主／帳號：${hall} / ${account}`);
+    if (site === "試玩模式") {
+    lines.push(`測試廳主：${hall}`);
+} else {
+    lines.push(`測試廳主/帳號：${hall} / ${account}`);
+}
 
     const deviceLines = getDeviceLines();
     
@@ -733,6 +756,21 @@ window.addEventListener("DOMContentLoaded",()=>{
     bugDef.addEventListener("change",updateFullPreview);
 
     setToday();
+// 🔒 試玩模式 → 帳號欄位凍結 + 清空
+document.getElementById("site").addEventListener("change", () => {
+    const site = document.getElementById("site").value;
+    const accountInput = document.getElementById("account");
+
+    if (site === "試玩模式") {
+        accountInput.value = "";
+        accountInput.disabled = true;
+    } else {
+        accountInput.disabled = false;
+    }
+
+    updateFullPreview();
+});
+
 
 // 自動同步 iOS OS 版本到 Safari 欄位
 document.getElementById("ios-os").addEventListener("input", () => {
@@ -744,6 +782,10 @@ document.getElementById("ios-os").addEventListener("input", () => {
     setupMemoryField("tester","tester");
     setupMemoryField("version","version");
     setupMemoryField("account","account");
+// 強化帳號欄位的即時預覽更新
+["input","keyup","change","blur"].forEach(ev => {
+    document.getElementById("account").addEventListener(ev, updateFullPreview);
+});
 
     updateFullPreview();
 
