@@ -381,7 +381,7 @@ select option[disabled]{display:none;}
 
         <div class="form-row">
             <label>注單編號：</label>
-            <input type="text" id="order_id" autocomplete="new-password" name="nohistory-order">
+            <input type="text" id="order_id" autocomplete="new-password" name="nohistory-order" placeholder="未有注單可跳過">
         </div>
     </div>
     <!-- 描述內容 -->
@@ -432,7 +432,9 @@ select option[disabled]{display:none;}
 /* 設定今日日期 */
 function setToday(){
     const d=document.getElementById("incident_date");
-    d.value=new Date().toISOString().split("T")[0];
+    const today=new Date().toISOString().split("T")[0];
+    d.value=today;
+    d.max=today;
 }
 
 /* 遊戲清單 */
@@ -508,9 +510,9 @@ function updateTitle(){
 
     if(full){
         const parts=full.split(" ");
-        const id=parts[0];
+        const id=parts[0].replace('Game','');
         const name=parts.slice(1).join(" ");
-        result=`【${id}】【${name}】${desc}`;
+        result=`${id}_${name}_${desc}`;
     }
 
     document.getElementById("title-preview").value=result;
@@ -596,7 +598,7 @@ function updateFullPreview(){
     const site=document.getElementById("site").value;
     const hall=document.getElementById("hall").value;
     const account=document.getElementById("account").value;
-    const order=document.getElementById("order_id").value;
+    const order = document.getElementById("order_id").value.trim() || "-";
 
     const op=document.getElementById("operation_editor").innerText.trim();
     const act=document.getElementById("actual_editor").innerText.trim();
