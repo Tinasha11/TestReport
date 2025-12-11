@@ -152,57 +152,81 @@
             grid-template-columns: 120px 300px;
         }
 
+        /* ====== ⭐ iOS 子選項（正式修改版） ====== */
+
+        /* Safari / Chrome / 其他整組左移，與你圖片一致 */
         #ios-browser-wrapper {
-            margin-left: 120px !important;
+            margin-left: 80px;   /* 你測試後確定的值 */
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 6px;
         }
 
+        /* Safari / Chrome — 左 120px（checkbox + label）、右側 260px（輸入欄位） */
         .ios-browser-group .device-row {
             display: grid;
-            grid-template-columns: 120px 200px;
+            grid-template-columns: 120px 260px; /* 你手動試出的完美比例 */
+            gap: 10px;
         }
 
+        /* ====== 其他（Other）三欄，只調整這行，不影響 Safari/Chrome ====== */
         .ios-extra-row {
             display: grid;
-            grid-template-columns: 120px 200px 200px;
-            gap: 8px;
+            grid-template-columns: 120px 260px 220px; /* 完全對齊 Safari/Chrome + Android */
+            gap: 10px;
         }
 
-        #ios-safari-version,
-        #ios-chrome-version,
-        #ios-other-name,
+        /* “瀏覽器（例：Edge）” 欄位 → 和 Safari/Chrome 一樣寬 */
+        #ios-other-name {
+            width: 260px;       /* ❗ 不加 !important 才不會干到其他欄位 */
+        }
+
+        /* “例：121.0” 欄位 → 位置後退，寬度固定 300px */
         #ios-other-version {
-            width: 200px !important;
+            width: 300px;       /* ❗ 精準對齊 Android 的瀏覽器欄位 */
         }
 
-        /* ====== 問題描述放大 ====== */
-        #problem-desc {
-            width: 100% !important;
-        }
-
-        /* ====== 按鈕 ====== */
+        /* === 覆寫按鈕 UI（依照你的圖片樣式）=== */
         .button-row {
             display: flex;
             justify-content: center;
-            gap: 10px;
-            margin-top: 1rem;
+            gap: 12px;
+            margin: 20px 0;
         }
 
-        button {
-            padding: 7px 14px;
+        .button-row button {
+            padding: 10px 26px;
             border-radius: 999px;
             border: none;
-            cursor: pointer;
-            font-size: 0.95rem;
             background-color: #4a90e2;
-            color: white;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s ease-in-out;
         }
-        button:hover {
+
+        .button-row button:hover {
             background-color: #357bd8;
         }
+
+        .button-row button:active {
+            transform: scale(0.96);
+        }
+
+        #problem-desc {
+            width: 735px !important;
+        }        
+
+        #bug_def {
+            width: 644px !important;
+        }
+
     </style>
+
+<style>
+select option[disabled]{display:none;}
+</style>
 </head>
 <body autocomplete="off">
 <div class="container">
@@ -217,7 +241,7 @@
             <label>遊戲：</label>
             <div class="autocomplete-wrapper">
                 <input type="text" id="game-select" autocomplete="new-password" name="nohistory-game"
-                    placeholder="Game ID 或名稱">
+                    placeholder="搜尋遊戲（GameID 或名稱）">
                 <div class="suggestions" id="game-suggestions"></div>
             </div>
         </div>
@@ -246,6 +270,19 @@
                     data-memory-key="tester" autocomplete="new-password" name="nohistory-tester">
                 <div class="suggestions"></div>
             </div>
+        </div>
+
+        <div class="form-row">
+            <label>BUG 等級：</label>
+            <select id="bug_level">
+                <option value="" disabled selected>請選擇</option>
+                <option value="高">高</option>
+                <option value="中">中</option>
+                <option value="低">低</option>
+            </select>
+            <select id="bug_def" disabled>
+                <option>請先選擇 BUG 等級</option>
+            </select>
         </div>
 
         <div class="form-row">
@@ -313,7 +350,7 @@
             </div>
         </div>
 
-        <!-- iOS 子欄位 -->
+        <!-- iOS 子欄位（已套用你要求的左移 + 寬度調整） -->
         <div class="form-row" id="ios-browser-wrapper" style="display:none;">
             <div class="ios-browser-group">
 
@@ -321,7 +358,7 @@
                     <label><input type="checkbox" class="ios-browser" id="ios-safari">
                         Safari</label>
                     <input type="text" id="ios-safari-version" autocomplete="new-password" name="nohistory-isv"
-                        class="browser-version-input" placeholder="例：16.4">
+                        class="browser-version-input" placeholder="Safari版本為iOS版本" readonly style="background:#ddd;color:#555;">
                 </div>
 
                 <div class="device-row">
@@ -347,7 +384,6 @@
             <input type="text" id="order_id" autocomplete="new-password" name="nohistory-order">
         </div>
     </div>
-
     <!-- 描述內容 -->
     <div class="section">
         <h2>描述內容（可貼圖片）</h2>
@@ -390,6 +426,7 @@
         <textarea id="full-preview" rows="16" readonly></textarea>
     </div>
 </div>
+
 <!-- ===================== JS ======================= -->
 <script>
 /* 設定今日日期 */
@@ -493,11 +530,9 @@ function formatBrowser(value){
     const v = value.trim();
     if (!v) return "";
 
-    // 含非數字/小數點 → 視為自訂（可含中英文）
     if (!/^[0-9.]+$/.test(v)){
         return `瀏覽器：${v}`;
     }
-    // 純數字 → 預設 Chrome
     return `瀏覽器：Chrome ${v}`;
 }
 
@@ -529,14 +564,17 @@ function getDeviceLines(){
         const os = formatOS("iOS", document.getElementById("ios-os").value);
 
         const parts = [];
+
         if (document.getElementById("ios-safari").checked) {
-            const v = document.getElementById("ios-safari-version").value.trim();
+            const v = document.getElementById("ios-os").value.trim();
             if (v) parts.push(`Safari ${v}`);
         }
+
         if (document.getElementById("ios-chrome").checked) {
             const v = document.getElementById("ios-chrome-version").value.trim();
             if (v) parts.push(`Chrome ${v}`);
         }
+
         const on = document.getElementById("ios-other-name").value.trim();
         const ov = document.getElementById("ios-other-version").value.trim();
         if (on) parts.push(ov ? `${on} ${ov}` : on);
@@ -566,15 +604,19 @@ function updateFullPreview(){
     const remark=document.getElementById("remark_editor").innerText.trim();
 
     const lines = [];
+    const bugLvl=document.getElementById("bug_level").value;
+    const bugD=document.getElementById("bug_def").value;
+
     lines.push(`發生時間：${date}`);
     lines.push(`測試者：${tester}`);
+    if(bugLvl){ lines.push(`BUG 等級：${bugLvl}（${bugD}）`); }
     lines.push(`版本：${version}`);
     lines.push(`站別：${site}`);
     lines.push(`測試廳主／帳號：${hall} / ${account}`);
 
-    // 裝置區塊：標題一行，下面每裝置一行（有勾才顯示）
     const deviceLines = getDeviceLines();
-    lines.push(`裝置：`);
+    
+lines.push(`裝置：`);
     deviceLines.forEach(l => lines.push(l));
 
     lines.push(`注單編號：${order}`);
@@ -649,7 +691,53 @@ function setupMemoryField(id,key){
 
 /* --- 初始化 --- */
 window.addEventListener("DOMContentLoaded",()=>{
+    const bugDefOptions={
+        "高":[
+            "核心功能無法供使用、服務中斷、資料嚴重錯誤",
+            "非核心流程中斷，但會造成大範圍使用影響"
+        ],
+        "中":[
+            "功能異常但可替代、可繞過",
+            "圖片顯示不完整"
+        ],
+        "低":[
+            "體驗或顯示問題，不影響主要功能"
+        ]
+    };
+
+    const bugLevel=document.getElementById("bug_level");
+    const bugDef=document.getElementById("bug_def");
+
+    bugLevel.addEventListener("change",()=>{
+        const lvl=bugLevel.value;
+        bugDef.innerHTML="";
+        if(bugDefOptions[lvl]){
+            bugDefOptions[lvl].forEach(txt=>{
+                const op=document.createElement("option");
+                op.value=txt;
+                op.textContent=txt;
+                bugDef.appendChild(op);
+            });
+            bugDef.disabled=false;
+        }else{
+            bugDef.disabled=true;
+            const op=document.createElement("option");
+            op.textContent="請先選擇 BUG 等級";
+            bugDef.appendChild(op);
+        }
+        updateFullPreview();
+    });
+
+    bugDef.addEventListener("change",updateFullPreview);
+
     setToday();
+
+// 自動同步 iOS OS 版本到 Safari 欄位
+document.getElementById("ios-os").addEventListener("input", () => {
+    const os = document.getElementById("ios-os").value.trim();
+    document.getElementById("ios-safari-version").value = os;
+});
+
 
     setupMemoryField("tester","tester");
     setupMemoryField("version","version");
@@ -695,4 +783,3 @@ window.addEventListener("DOMContentLoaded",()=>{
 
 </body>
 </html>
-
