@@ -272,18 +272,6 @@ select option[disabled]{display:none;}
             </div>
         </div>
 
-        <div class="form-row">
-            <label>BUG 等級：</label>
-            <select id="bug_level">
-                <option value="" disabled selected>請選擇</option>
-                <option value="高">高</option>
-                <option value="中">中</option>
-                <option value="低">低</option>
-            </select>
-            <select id="bug_def" disabled>
-                <option>請先選擇 BUG 等級</option>
-            </select>
-        </div>
 
         <div class="form-row">
             <label>版本：</label>
@@ -625,12 +613,9 @@ function updateFullPreview(){
     const remark=document.getElementById("remark_editor").innerText.trim();
 
     const lines = [];
-    const bugLvl=document.getElementById("bug_level").value;
-    const bugD=document.getElementById("bug_def").value;
 
     lines.push(`發生時間：${date}`);
     lines.push(`測試者：${tester}`);
-    if(bugLvl){ lines.push(`BUG 等級：${bugLvl}（${bugD}）`); }
     lines.push(`版本：${version}`);
     lines.push(`站別：${site}`);
     if (site === "試玩模式") {
@@ -716,45 +701,6 @@ function setupMemoryField(id,key){
 
 /* --- 初始化 --- */
 window.addEventListener("DOMContentLoaded",()=>{
-    const bugDefOptions={
-        "高":[
-            "核心功能無法供使用、服務中斷、資料嚴重錯誤",
-            "非核心流程中斷，但會造成大範圍使用影響"
-        ],
-        "中":[
-            "功能異常但可替代、可繞過",
-            "圖片顯示不完整"
-        ],
-        "低":[
-            "體驗或顯示問題，不影響主要功能"
-        ]
-    };
-
-    const bugLevel=document.getElementById("bug_level");
-    const bugDef=document.getElementById("bug_def");
-
-    bugLevel.addEventListener("change",()=>{
-        const lvl=bugLevel.value;
-        bugDef.innerHTML="";
-        if(bugDefOptions[lvl]){
-            bugDefOptions[lvl].forEach(txt=>{
-                const op=document.createElement("option");
-                op.value=txt;
-                op.textContent=txt;
-                bugDef.appendChild(op);
-            });
-            bugDef.disabled=false;
-        }else{
-            bugDef.disabled=true;
-            const op=document.createElement("option");
-            op.textContent="請先選擇 BUG 等級";
-            bugDef.appendChild(op);
-        }
-        updateFullPreview();
-    });
-
-    bugDef.addEventListener("change",updateFullPreview);
-
     setToday();
 // 🔒 試玩模式 → 帳號欄位凍結 + 清空
 document.getElementById("site").addEventListener("change", () => {
