@@ -152,35 +152,41 @@
             grid-template-columns: 120px 300px;
         }
 
-        /* iOS 子選項 */
+        /* ====== ⭐ iOS 子選項（正式修改版） ====== */
+
+        /* Safari / Chrome / 其他整組左移，與你圖片一致 */
         #ios-browser-wrapper {
-            margin-left: 80px;
+            margin-left: 80px;   /* 你測試後確定的值 */
             display: flex;
             flex-direction: column;
             gap: 6px;
         }
 
+        /* Safari / Chrome — 左 120px（checkbox + label）、右側 260px（輸入欄位） */
         .ios-browser-group .device-row {
             display: grid;
-            grid-template-columns: 120px 260px;
+            grid-template-columns: 120px 260px; /* 你手動試出的完美比例 */
             gap: 10px;
         }
 
+        /* ====== 其他（Other）三欄，只調整這行，不影響 Safari/Chrome ====== */
         .ios-extra-row {
             display: grid;
-            grid-template-columns: 120px 260px 220px;
+            grid-template-columns: 120px 260px 220px; /* 完全對齊 Safari/Chrome + Android */
             gap: 10px;
         }
 
+        /* “瀏覽器（例：Edge）” 欄位 → 和 Safari/Chrome 一樣寬 */
         #ios-other-name {
-            width: 260px;
+            width: 260px;       /* ❗ 不加 !important 才不會干到其他欄位 */
         }
 
+        /* “例：121.0” 欄位 → 位置後退，寬度固定 300px */
         #ios-other-version {
-            width: 300px;
+            width: 300px;       /* ❗ 精準對齊 Android 的瀏覽器欄位 */
         }
 
-        /* 按鈕樣式 */
+        /* === 覆寫按鈕 UI（依照你的圖片樣式）=== */
         .button-row {
             display: flex;
             justify-content: center;
@@ -210,12 +216,46 @@
 
         #problem-desc {
             width: 735px !important;
+        }        
+
+        #bug_def {
+            width: 644px !important;
         }
 
-        select option[disabled] {
-            display: none;
+    
+        /* ====== 已選遊戲（橫向 chip 樣式） ====== */
+        #selected-games {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
         }
-    </style>
+        .game-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: #e6f2ff;
+            color: #1f4fa3;
+            font-size: 0.85rem;
+        }
+        .game-chip button {
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 0.9rem;
+            line-height: 1;
+            color: #1f4fa3;
+        }
+        .game-chip button:hover {
+            color: #c00;
+        }
+
+</style>
+
+<style>
+select option[disabled]{display:none;}
+</style>
 </head>
 <body autocomplete="off">
 <div class="container">
@@ -230,8 +270,9 @@
             <label>遊戲：</label>
             <div class="autocomplete-wrapper">
                 <input type="text" id="game-select" autocomplete="new-password" name="nohistory-game"
-                    style="width: 450px;" placeholder="搜尋遊戲（Game Code 或名稱），若無需使用可留白">
+                    style="width: 345px;" placeholder="搜尋遊戲（GameID 或名稱），可複選">
                 <div class="suggestions" id="game-suggestions"></div>
+                <div id="selected-games" style="margin-top:6px;font-size:0.9rem;color:#333;"></div>
             </div>
         </div>
 
@@ -329,7 +370,7 @@
             </div>
         </div>
 
-        <!-- iOS 子欄位 -->
+        <!-- iOS 子欄位（已套用你要求的左移 + 寬度調整） -->
         <div class="form-row" id="ios-browser-wrapper" style="display:none;">
             <div class="ios-browser-group">
 
@@ -448,105 +489,138 @@ const gameList=[["Game101","瘋狂實驗室"],["Game102","開運金獅"],["Game1
 ["Game211","財神妙"],["Game212","Lucky Guess"],["Game213","金豪鯉"],["Game214","賽馬娘"],
 ["Game215","X型連爆中式"]];
 
-/* --- autocomplete 遊戲搜尋 --- */
-const gameInput = document.getElementById("game-select");
-const gameSuggest = document.getElementById("game-suggestions");
+/* --- autocomplete 遊戲搜尋（✅ 複選版） --- */
+const gameInput=document.getElementById("game-select");
+const gameSuggest=document.getElementById("game-suggestions");
 
-function createSuggestionItem(text, callback) {
-    const div = document.createElement("div");
-    div.className = "suggestion-item";
-    div.textContent = text;
-    div.addEventListener("mousedown", callback);
-    return div;
+let selectedGames = []; // [{id,name}]
+
+function renderSelectedGames(){
+    const box = document.getElementById("selected-games");
+    box.innerHTML = "";
+    selectedGames.forEach((g, idx) => {
+        const chip = document.createElement("div");
+        chip.className = "game-chip";
+        chip.textContent = `${g.id} ${g.name}`;
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = "×";
+        btn.addEventListener("click", () => {
+            selectedGames.splice(idx, 1);
+            renderSelectedGames();
+            updateTitle();
+        });
+
+        chip.appendChild(btn);
+        box.appendChild(chip);
+    });
 }
 
-function renderGameList(keyword = "") {
-    const kw = keyword.toLowerCase();
-    gameSuggest.innerHTML = "";
+function renderGameList(keyword=""){
+    const kw=keyword.toLowerCase();
+    gameSuggest.innerHTML="";
 
-    const matches = gameList.filter(([id, name]) =>
+    const matches=gameList.filter(([id,name]) =>
         id.toLowerCase().includes(kw) || name.toLowerCase().includes(kw)
     );
 
-    // 加入清除選項
-    gameSuggest.appendChild(createSuggestionItem("(清除選擇)", () => {
+    // 清除全部
+    const blankDiv = document.createElement("div");
+    blankDiv.className = "suggestion-item";
+    blankDiv.textContent = "(清除全部)";
+    blankDiv.addEventListener("mousedown", () => {
+        selectedGames = [];
         gameInput.value = "";
+        renderSelectedGames();
         gameSuggest.style.display = "none";
         updateTitle();
-    }));
+    });
+    gameSuggest.appendChild(blankDiv);
 
-    // 加入匹配結果
-    matches.forEach(([id, name]) => {
-        gameSuggest.appendChild(createSuggestionItem(`${id} ${name}`, () => {
-            gameInput.value = `${id} ${name}`;
-            gameSuggest.style.display = "none";
+    matches.forEach(([id,name])=>{
+        const div=document.createElement("div");
+        div.className="suggestion-item";
+        div.textContent=`${id} ${name}`;
+        div.addEventListener("mousedown",()=>{
+            if(!selectedGames.find(g => g.id === id)){
+                selectedGames.push({id,name});
+            }
+            gameInput.value = "";
+            renderSelectedGames();
+            gameSuggest.style.display="none";
             updateTitle();
-        }));
+        });
+        gameSuggest.appendChild(div);
     });
 
-    gameSuggest.style.display = matches.length ? "block" : "none";
+    gameSuggest.style.display = matches.length ? "block":"none";
 }
 
-gameInput.addEventListener("focus", () => renderGameList(""));
-gameInput.addEventListener("input", () => {
+gameInput.addEventListener("focus",()=>renderGameList(""));
+gameInput.addEventListener("input",()=>{
     renderGameList(gameInput.value);
-    updateTitle();
 });
-document.addEventListener("click", (e) => {
-    if (!gameInput.contains(e.target) && !gameSuggest.contains(e.target)) {
-        gameSuggest.style.display = "none";
-    }
+document.addEventListener("click",(e)=>{
+    if(!gameInput.contains(e.target)) gameSuggest.style.display="none";
 });
 
 /* --- 標題生成 --- */
-function updateTitle() {
-    const full = gameInput.value.trim();
-    const desc = document.getElementById("problem-desc").value.trim();
-    let result = "";
+function updateTitle(){
+    const desc=document.getElementById("problem-desc").value.trim();
+    let result="";
 
-    if (full) {
-        const parts = full.split(" ");
-        const id = parts[0].replace("Game", "");
-        const name = parts.slice(1).join(" ");
-        result = `${id}_${name}_${desc}`;
-    } else if (desc) {
+    if (selectedGames.length){
+        const gamePart = selectedGames.map(g => {
+            const id = g.id.replace('Game','');
+            return `${id}_${g.name}`;
+        }).join("、");
+
+        result = desc ? `${gamePart}_${desc}` : gamePart;
+    } else if (desc){
         result = desc;
     }
 
-    document.getElementById("title-preview").value = result;
+    document.getElementById("title-preview").value=result;
     updateFullPreview();
 }
-document.getElementById("problem-desc").addEventListener("input", updateTitle);
+document.getElementById("problem-desc").addEventListener("input",updateTitle);
 
 /* --- 智能 OS 補字首 --- */
-function formatOS(prefix, value) {
+function formatOS(prefix, value){
     value = value.trim();
     if (!value) return "";
     return `${prefix} ${value}`;
 }
 
 /* --- 智能瀏覽器判斷（PC / Android 共用） --- */
-function formatBrowser(value) {
+function formatBrowser(value){
     const v = value.trim();
     if (!v) return "";
-    return /^[0-9.]+$/.test(v) ? `瀏覽器：Chrome ${v}` : `瀏覽器：${v}`;
+
+    if (!/^[0-9.]+$/.test(v)){
+        return `瀏覽器：${v}`;
+    }
+    return `瀏覽器：Chrome ${v}`;
 }
 
 /* --- 裝置資料組裝（回傳每裝置一行字串） --- */
-function getDeviceLines() {
+function getDeviceLines(){
     const list = [];
-    const getEl = (id) => document.getElementById(id);
 
     // PC
-    if (getEl("device-pc").checked) {
-        const br = formatBrowser(getEl("pc-browser").value);
-        list.push(br ? `．PC（${br}）` : "．PC");
+    if (document.getElementById("device-pc").checked) {
+        const br = formatBrowser(document.getElementById("pc-browser").value);
+        let line = "．PC";
+        if (br) line += `（${br}）`;
+        list.push(line);
     }
 
     // Android
-    if (getEl("device-android").checked) {
-        const os = formatOS("Android", getEl("android-os").value);
-        const br = formatBrowser(getEl("android-browser").value);
+    if (document.getElementById("device-android").checked) {
+        const os = formatOS("Android", document.getElementById("android-os").value);
+        const br = formatBrowser(document.getElementById("android-browser").value);
+
         let line = "．Android";
         if (os) line += `（${os}）`;
         if (br) line += `（${br}）`;
@@ -554,193 +628,205 @@ function getDeviceLines() {
     }
 
     // iOS
-    if (getEl("ios-check").checked) {
-        const os = formatOS("iOS", getEl("ios-os").value);
+    if (document.getElementById("ios-check").checked) {
+        const os = formatOS("iOS", document.getElementById("ios-os").value);
+
         const parts = [];
 
-        if (getEl("ios-safari").checked) {
-            const v = getEl("ios-os").value.trim();
+        if (document.getElementById("ios-safari").checked) {
+            const v = document.getElementById("ios-os").value.trim();
             if (v) parts.push(`Safari ${v}`);
         }
-        if (getEl("ios-chrome").checked) {
-            const v = getEl("ios-chrome-version").value.trim();
+
+        if (document.getElementById("ios-chrome").checked) {
+            const v = document.getElementById("ios-chrome-version").value.trim();
             if (v) parts.push(`Chrome ${v}`);
         }
-        const on = getEl("ios-other-name").value.trim();
-        const ov = getEl("ios-other-version").value.trim();
+
+        const on = document.getElementById("ios-other-name").value.trim();
+        const ov = document.getElementById("ios-other-version").value.trim();
         if (on) parts.push(ov ? `${on} ${ov}` : on);
 
-        const browserPart = parts.length ? `（瀏覽器：${parts.join("、")}）` : "";
-        list.push(os ? `．iOS（${os}）${browserPart}` : `．iOS${browserPart}`);
+        let line = "．iOS";
+        if (os) line += `（${os}）`;
+        if (parts.length) line += `（瀏覽器：${parts.join("、")}）`;
+        list.push(line);
     }
 
     return list;
 }
 
 /* --- 預覽內容更新 --- */
-function updateFullPreview() {
-    const getEl = (id) => document.getElementById(id);
-    const getValue = (id) => getEl(id).value;
-    const getText = (id) => getEl(id).innerText.trim();
+function updateFullPreview(){
+    const date=document.getElementById("incident_date").value;
+    const tester=document.getElementById("tester").value;
+    const version=document.getElementById("version").value;
+    const site=document.getElementById("site").value;
+    const hall=document.getElementById("hall").value;
+    const account=document.getElementById("account").value;
+    const order = document.getElementById("order_id").value.trim() || "-";
 
-    const date = getValue("incident_date");
-    const tester = getValue("tester");
-    const version = getValue("version");
-    const site = getValue("site");
-    const hall = getValue("hall");
-    const account = getValue("account");
-    const order = getValue("order_id").trim() || "-";
+    const op=document.getElementById("operation_editor").innerText.trim();
+    const act=document.getElementById("actual_editor").innerText.trim();
+    const exp=document.getElementById("expected_editor").innerText.trim();
+    const remark=document.getElementById("remark_editor").innerText.trim();
+
+    const lines = [];
+
+    lines.push(`發生時間：${date}`);
+    lines.push(`測試者：${tester}`);
+    lines.push(`版本：${version}`);
+    lines.push(`站別：${site}`);
+    if (site === "試玩模式") {
+    lines.push(`測試廳主：${hall}`);
+} else {
+    lines.push(`測試廳主/帳號：${hall} / ${account}`);
+}
 
     const deviceLines = getDeviceLines();
-    const deviceSection = deviceLines.length === 1 
-        ? [`裝置：${deviceLines[0].replace("．", "")}`]
-        : ["裝置：", ...deviceLines];
+    
+lines.push(`裝置：`);
+    deviceLines.forEach(l => lines.push(l));
 
-    const lines = [
-        `發生時間：${date}`,
-        `測試者：${tester}`,
-        `版本：${version}`,
-        `站別：${site}`,
-        site === "試玩模式" ? `測試廳主：${hall}` : `測試廳主/帳號：${hall} / ${account}`,
-        ...deviceSection,
-        `注單編號：${order}`,
-        "",
-        "操作：",
-        getText("operation_editor"),
-        "",
-        "實際結果：",
-        getText("actual_editor"),
-        "",
-        "預期結果：",
-        getText("expected_editor"),
-        "",
-        "備註：",
-        getText("remark_editor")
-    ];
+    lines.push(`注單編號：${order}`);
+    lines.push("");
+    lines.push("操作：");
+    lines.push(op);
+    lines.push("");
+    lines.push("實際結果：");
+    lines.push(act);
+    lines.push("");
+    lines.push("預期結果：");
+    lines.push(exp);
+    lines.push("");
+    lines.push("備註：");
+    lines.push(remark);
 
-    getEl("full-preview").value = lines.join("\n");
+    document.getElementById("full-preview").value = lines.join("\n");
 }
 
 /* --- 複製 --- */
-function copyToClipboard(text, message) {
-    navigator.clipboard.writeText(text);
-    alert(message);
-}
-
-document.getElementById("copy-title-btn").addEventListener("click", () => {
-    copyToClipboard(document.getElementById("title-preview").value, "標題已複製！");
+document.getElementById("copy-title-btn").addEventListener("click",()=>{
+    navigator.clipboard.writeText(document.getElementById("title-preview").value);
+    alert("標題已複製！");
 });
-document.getElementById("copy-btn").addEventListener("click", () => {
-    copyToClipboard(document.getElementById("full-preview").value, "全文已複製（不含標題）！");
+document.getElementById("copy-btn").addEventListener("click",()=>{
+    navigator.clipboard.writeText(document.getElementById("full-preview").value);
+    alert("全文已複製（不含標題）！");
 });
 
 /* --- 自訂記憶 autocomplete --- */
-function loadMemory(key) {
-    try {
-        return JSON.parse(localStorage.getItem(key)) || [];
-    } catch {
-        return [];
-    }
-}
+function loadMemory(key){ try{return JSON.parse(localStorage.getItem(key))||[]}catch{return[]} }
+function saveMemory(key,arr){ localStorage.setItem(key,JSON.stringify(arr)); }
 
-function saveMemory(key, arr) {
-    localStorage.setItem(key, JSON.stringify(arr));
-}
+function setupMemoryField(id,key){
+    const input=document.getElementById(id);
+    const wrap=input.closest(".autocomplete-wrapper");
+    const box=wrap.querySelector(".suggestions");
+    let list=loadMemory(key);
 
-function setupMemoryField(id, key) {
-    const input = document.getElementById(id);
-    const box = input.closest(".autocomplete-wrapper").querySelector(".suggestions");
-    let list = loadMemory(key);
+    function render(filter=""){
+        const kw=filter.toLowerCase();
+        box.innerHTML="";
 
-    function render(filter = "") {
-        const kw = filter.toLowerCase();
-        box.innerHTML = "";
-
-        const matches = list.filter(v => v.toLowerCase().includes(kw));
-        matches.forEach(v => {
-            box.appendChild(createSuggestionItem(v, () => {
-                input.value = v;
-                box.style.display = "none";
+        const matches=list.filter(v=>v.toLowerCase().includes(kw));
+        matches.forEach(v=>{
+            const div=document.createElement("div");
+            div.className="suggestion-item";
+            div.textContent=v;
+            div.addEventListener("mousedown",()=>{
+                input.value=v;
+                box.style.display="none";
                 updateFullPreview();
-            }));
+            });
+            box.appendChild(div);
         });
 
-        box.style.display = matches.length ? "block" : "none";
+        box.style.display = matches.length ? "block":"none";
     }
 
-    input.addEventListener("focus", () => render(""));
-    input.addEventListener("input", () => render(input.value));
-    input.addEventListener("blur", () => {
-        const v = input.value.trim();
-        if (v && !list.includes(v)) {
+    input.addEventListener("focus",()=>render(""));
+    input.addEventListener("input",()=>render(input.value));
+
+    input.addEventListener("blur",()=>{
+        const v=input.value.trim();
+        if(v && !list.includes(v)){
             list.push(v);
-            saveMemory(key, list);
+            saveMemory(key,list);
         }
-        setTimeout(() => box.style.display = "none", 120);
+        setTimeout(()=>box.style.display="none",120);
     });
 }
 
 /* --- 初始化 --- */
-window.addEventListener("DOMContentLoaded", () => {
-    const getEl = (id) => document.getElementById(id);
-
+window.addEventListener("DOMContentLoaded",()=>{
     setToday();
+// 🔒 試玩模式 → 帳號欄位凍結 + 清空
+document.getElementById("site").addEventListener("change", () => {
+    const site = document.getElementById("site").value;
+    const accountInput = document.getElementById("account");
 
-    // 試玩模式 → 帳號欄位凍結 + 清空
-    getEl("site").addEventListener("change", () => {
-        const accountInput = getEl("account");
-        const isDemoMode = getEl("site").value === "試玩模式";
-        accountInput.value = isDemoMode ? "" : accountInput.value;
-        accountInput.disabled = isDemoMode;
-        updateFullPreview();
-    });
+    if (site === "試玩模式") {
+        accountInput.value = "";
+        accountInput.disabled = true;
+    } else {
+        accountInput.disabled = false;
+    }
 
-    // 自動同步 iOS OS 版本到 Safari 欄位
-    getEl("ios-os").addEventListener("input", () => {
-        getEl("ios-safari-version").value = getEl("ios-os").value.trim();
-    });
+    updateFullPreview();
+});
 
-    // 設定記憶欄位
-    setupMemoryField("tester", "tester");
-    setupMemoryField("version", "version");
-    setupMemoryField("account", "account");
 
-    // 帳號欄位即時預覽更新
-    ["input", "keyup", "change", "blur"].forEach(ev => {
-        getEl("account").addEventListener(ev, updateFullPreview);
-    });
+// 自動同步 iOS OS 版本到 Safari 欄位
+document.getElementById("ios-os").addEventListener("input", () => {
+    const os = document.getElementById("ios-os").value.trim();
+    document.getElementById("ios-safari-version").value = os;
+});
+
+
+    setupMemoryField("tester","tester");
+    setupMemoryField("version","version");
+    setupMemoryField("account","account");
+// 強化帳號欄位的即時預覽更新
+["input","keyup","change","blur"].forEach(ev => {
+    document.getElementById("account").addEventListener(ev, updateFullPreview);
+});
+
+    updateFullPreview();
 
     // 控制 iOS 子欄位顯示
-    document.querySelectorAll(".device-check").forEach(chk => {
-        chk.addEventListener("change", () => {
-            getEl("ios-browser-wrapper").style.display = 
-                getEl("ios-check").checked ? "flex" : "none";
+    document.querySelectorAll(".device-check").forEach(chk=>{
+        chk.addEventListener("change",()=>{
+            const ios=document.getElementById("ios-check").checked;
+            document.getElementById("ios-browser-wrapper").style.display = ios ? "flex" : "none";
             updateFullPreview();
         });
     });
 
     // iOS 子瀏覽器更新
-    document.querySelectorAll(".ios-browser").forEach(chk => {
-        chk.addEventListener("change", updateFullPreview);
+    document.querySelectorAll(".ios-browser").forEach(chk=>{
+        chk.addEventListener("change",updateFullPreview);
     });
 
-    // 基本欄位監聽
+    // 基本欄位
     [
-        "incident_date", "site", "hall", "order_id",
-        "operation_editor", "actual_editor", "expected_editor", "remark_editor"
-    ].forEach(id => getEl(id).addEventListener("input", updateFullPreview));
-
-    // 裝置欄位監聽
-    [
-        "pc-browser", "android-os", "android-browser", "ios-os",
-        "ios-safari-version", "ios-chrome-version",
-        "ios-other-name", "ios-other-version"
-    ].forEach(id => {
-        const el = getEl(id);
-        if (el) el.addEventListener("input", updateFullPreview);
+        "incident_date","site","hall","order_id",
+        "operation_editor","actual_editor","expected_editor","remark_editor"
+    ].forEach(id=>{
+        document.getElementById(id).addEventListener("input",updateFullPreview);
     });
 
-    updateFullPreview();
+    // 裝置欄位
+    [
+        "pc-browser",
+        "android-os","android-browser",
+        "ios-os",
+        "ios-safari-version","ios-chrome-version",
+        "ios-other-name","ios-other-version"
+    ].forEach(id=>{
+        const el=document.getElementById(id);
+        if(el) el.addEventListener("input",updateFullPreview);
+    });
 });
 </script>
 
