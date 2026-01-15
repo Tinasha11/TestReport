@@ -61,7 +61,17 @@
             font-weight: 500;
         }
 
-        /* ====== 基本 input 樣式 ====== */
+        
+        /* 讓裝置區塊在 form-row 中撐滿剩餘寬度（Android 瀏覽器版本可延伸至最右側） */
+        .device-group {
+            flex: 1;
+            min-width: 0; /* 避免 flex 子項被內容撐爆 */
+            max-width: 696px; /* 比照 iOS 其他區塊的實際右緣（120+260+300+gap*2） */ /* 與 iOS 其他區塊的寬度一致，避免過寬 */
+        }
+        .device-group .device-row {
+            width: 100%;
+        }
+/* ====== 基本 input 樣式 ====== */
         input[type="text"],
         input[type="date"],
         select,
@@ -166,14 +176,14 @@
         .ios-browser-group .device-row {
             display: grid;
             grid-template-columns: 120px 260px; /* 你手動試出的完美比例 */
-            gap: 10px;
+            gap: 8px;
         }
 
         /* ====== 其他（Other）三欄，只調整這行，不影響 Safari/Chrome ====== */
         .ios-extra-row {
             display: grid;
             grid-template-columns: 120px 260px 220px; /* 完全對齊 Safari/Chrome + Android */
-            gap: 10px;
+            gap: 8px;
         }
 
         /* “瀏覽器（例：Edge）” 欄位 → 和 Safari/Chrome 一樣寬 */
@@ -251,6 +261,90 @@
             color: #c00;
         }
 
+
+        /* ====== ✅ 新增：裝置型號欄位 ====== */
+        .device-row.with-model {
+            grid-template-columns: 120px 220px 1fr;
+        }
+        .device-row.android.with-model {
+            grid-template-columns: 120px 220px 140px 1fr;
+        }
+        
+        /* Android：讓各欄位 input 充滿各自的 grid 欄位，避免視覺間距不一致 */
+        .device-row.android.with-model .autocomplete-wrapper,
+        .device-row.android.with-model input[type="text"]{
+            width: 100%;
+        }
+        .device-row.android.with-model .autocomplete-wrapper input[type="text"]{
+            width: 100%;
+        }
+/* PC 原本兩欄，改為三欄（label + 型號 + 瀏覽器） */
+        #pc-row.with-model {
+            grid-template-columns: 120px 220px 1fr;
+        }
+        /* iOS 原本兩欄，改為三欄（label + OS + 型號） */
+        #ios-row.with-model {
+            grid-template-columns: 120px 220px 140px;
+        }
+
+
+        
+        /* iOS：避免型號被截短（讓型號欄位可伸縮並撐滿） */
+        #ios-row.with-model .autocomplete-wrapper,
+        #ios-row.with-model .autocomplete-wrapper input[type="text"]{
+            width: 100%;
+        }
+/* ====== 修正：iOS 型號 / 系統版本需同一列 ====== */
+        .device-row.with-model .autocomplete-wrapper {
+            flex: 0;
+            width: auto;
+        }
+
+
+        /* ====== ✅ 固定：保持 index_fixed7 的高度/間距，並讓「版本」輸入框寬度比照 PC/Android 欄位 ====== */
+        /* 目標：
+           - 保持 fixed7：兩行版本之間 gap=0、輸入框用 visibility 切換避免推擠
+           - 版本輸入框寬度改為與 PC/Android 的單一欄位寬度一致（300px）
+        */
+
+        :root{
+            --std-field-w: 300px; /* PC/Android 欄位的標準寬度（device-row 的 300px 欄位） */
+        }
+
+        /* fixed7：只覆寫版本那一列的 column gap（原本 inline gap:10px 會讓兩行行距過大） */
+        .form-row:has(#version-game-check) > div[style*="flex-direction:column"]{
+            gap: 0 !important;
+        }
+
+        /* fixed7：版本輸入框固定佔位（不推擠） */
+        #version-game-wrapper,
+        #version-bet-wrapper{
+            display: block !important;      /* 覆寫 inline display:none */
+            flex: 0 0 var(--std-field-w);   /* ✅ 寬度比照 PC/Android */
+            width: var(--std-field-w);
+            min-width: 0;
+        }
+        #version-game,
+        #version-bet{
+            width: 100%;                    /* 充滿上面的 300px wrapper */
+            min-width: 0;
+        }
+
+        /* 未勾選：隱藏但保留空間（不推擠） */
+        label:has(#version-game-check:not(:checked)) + #version-game-wrapper,
+        label:has(#version-bet-check:not(:checked)) + #version-bet-wrapper{
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+        }
+        /* 勾選：顯示 */
+        label:has(#version-game-check:checked) + #version-game-wrapper,
+        label:has(#version-bet-check:checked) + #version-bet-wrapper{
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
+        }
+
 </style>
 
 <style>
@@ -270,7 +364,7 @@ select option[disabled]{display:none;}
             <label>遊戲：</label>
             <div class="autocomplete-wrapper">
                 <input type="text" id="game-select" autocomplete="new-password" name="nohistory-game"
-                    style="width: 345px;" placeholder="搜尋遊戲（GameID 或名稱），可複選">
+                    style="width: 345px;" placeholder="搜尋遊戲（GameCode或名稱），可複選">
                 <div class="suggestions" id="game-suggestions"></div>
                 <div id="selected-games" style="margin-top:6px;font-size:0.9rem;color:#333;"></div>
             </div>
@@ -305,10 +399,34 @@ select option[disabled]{display:none;}
 
         <div class="form-row">
             <label>版本：</label>
-            <div class="autocomplete-wrapper">
-                <input type="text" id="version" class="memory-input"
-                    data-memory-key="version" autocomplete="new-password" name="nohistory-version">
-                <div class="suggestions"></div>
+
+            <!-- ✅ 版本（可複選）：遊戲版本 / 投注歷程版本 -->
+            <div style="display:flex;flex-direction:column;gap:10px;flex:1;">
+
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <label style="min-width:120px;font-weight:500;display:flex;align-items:center;gap:6px;margin:0;">
+                        <input type="checkbox" id="version-game-check"> 遊戲版本
+                    </label>
+                    <div class="autocomplete-wrapper" id="version-game-wrapper" style="display:none;">
+                        <input type="text" id="version-game" class="memory-input"
+                            data-memory-key="version_game" autocomplete="new-password" name="nohistory-version-game"
+                            placeholder="輸入遊戲版本號碼">
+                        <div class="suggestions"></div>
+                    </div>
+                </div>
+
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <label style="min-width:120px;font-weight:500;display:flex;align-items:center;gap:6px;margin:0;">
+                        <input type="checkbox" id="version-bet-check"> 投注歷程版本
+                    </label>
+                    <div class="autocomplete-wrapper" id="version-bet-wrapper" style="display:none;">
+                        <input type="text" id="version-bet" class="memory-input"
+                            data-memory-key="version_bet" autocomplete="new-password" name="nohistory-version-bet"
+                            placeholder="輸入投注歷程版本號碼">
+                        <div class="suggestions"></div>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -346,26 +464,37 @@ select option[disabled]{display:none;}
                 <div class="device-row" id="pc-row">
                     <label><input type="checkbox" class="device-check"
                         value="PC" id="device-pc"> PC</label>
-                    <input type="text" id="pc-browser" autocomplete="new-password" name="nohistory-pcb"
-                        class="browser-input" placeholder="瀏覽器版本（例：Chrome 120）">
+<input type="text" id="pc-browser" autocomplete="new-password" name="nohistory-pcb"
+                        class="browser-input" placeholder="瀏覽器版本">
                 </div>
 
                 <!-- Android -->
-                <div class="device-row">
-                    <label><input type="checkbox" class="device-check"
+                <div class="device-row android with-model"><label><input type="checkbox" class="device-check"
                         value="Android" id="device-android"> Android</label>
+                    <div class="autocomplete-wrapper">
+                        <input type="text" id="android-model" data-memory-key="android_model" autocomplete="new-password" name="nohistory-am"
+                        class="model-input memory-input" placeholder="裝置型號（非必要可略過）">
+                        <div class="suggestions"></div>
+                    </div>
                     <input type="text" id="android-os" autocomplete="new-password" name="nohistory-aos"
-                        class="os-input" placeholder="例：13">
+                        class="os-input" placeholder="系統版本">
                     <input type="text" id="android-browser" autocomplete="new-password" name="nohistory-ab"
-                        class="browser-input" placeholder="瀏覽器版本（例：Chrome 118）">
+                        class="browser-input" placeholder="瀏覽器版本">
                 </div>
 
                 <!-- iOS -->
-                <div class="device-row" id="ios-row">
+                <div class="device-row with-model" id="ios-row">
                     <label><input type="checkbox" class="device-check"
                         value="iOS" id="ios-check"> iOS</label>
+                    
+                    <div class="autocomplete-wrapper">
+                        <input type="text" id="ios-model" data-memory-key="ios_model" autocomplete="new-password" name="nohistory-im"
+                        class="model-input memory-input" placeholder="裝置型號（非必要可略過）">
+                        <div class="suggestions"></div>
+                    </div>
                     <input type="text" id="ios-os" autocomplete="new-password" name="nohistory-ios"
-                        class="os-input" placeholder="例：16.4">
+                        class="os-input" placeholder="系統版本">
+                    
                 </div>
             </div>
         </div>
@@ -385,7 +514,7 @@ select option[disabled]{display:none;}
                     <label><input type="checkbox" class="ios-browser" id="ios-chrome">
                         Chrome</label>
                     <input type="text" id="ios-chrome-version" autocomplete="new-password" name="nohistory-icv"
-                        class="browser-version-input" placeholder="例：120.1">
+                        class="browser-version-input" placeholder="瀏覽器版本">
                 </div>
 
                 <div class="ios-extra-row">
@@ -393,7 +522,7 @@ select option[disabled]{display:none;}
                     <input type="text" id="ios-other-name" autocomplete="new-password" name="nohistory-ion"
                         class="browser-name-input" placeholder="瀏覽器（例：Edge）">
                     <input type="text" id="ios-other-version" autocomplete="new-password" name="nohistory-iov"
-                        class="browser-version-input" placeholder="例：121.0">
+                        class="browser-version-input" placeholder="瀏覽器版本">
                 </div>
 
             </div>
@@ -608,59 +737,87 @@ function formatBrowser(value){
 function getDeviceLines(){
     const list = [];
 
-    // PC
+    // 去除 formatBrowser() 可能自帶的「瀏覽器：」前綴
+    const normBrowser = (s) => (s || "").replace(/^瀏覽器：\s*/, "").trim();
+
+    // PC（顯示瀏覽器）
     if (document.getElementById("device-pc").checked) {
-        const br = formatBrowser(document.getElementById("pc-browser").value);
+        const br = normBrowser(formatBrowser(document.getElementById("pc-browser").value));
         let line = "．PC";
-        if (br) line += `（${br}）`;
+        if (br) line += `（瀏覽器：${br}）`;
         list.push(line);
     }
 
-    // Android
+    // Android（顯示順序：型號 → 系統版本 → 瀏覽器）
     if (document.getElementById("device-android").checked) {
+        const model = document.getElementById("android-model").value.trim();
         const os = formatOS("Android", document.getElementById("android-os").value);
-        const br = formatBrowser(document.getElementById("android-browser").value);
-
-        let line = "．Android";
-        if (os) line += `（${os}）`;
-        if (br) line += `（${br}）`;
-        list.push(line);
-    }
-
-    // iOS
-    if (document.getElementById("ios-check").checked) {
-        const os = formatOS("iOS", document.getElementById("ios-os").value);
+        const br = normBrowser(formatBrowser(document.getElementById("android-browser").value));
 
         const parts = [];
+        if (model) parts.push(`型號：${model}`);
+        if (os) parts.push(`系統：${os}`);
+        if (br) parts.push(`瀏覽器：${br}`);
 
+        let line = "．Android";
+        if (parts.length) line += `（${parts.join("）（")}）`;
+        list.push(line);
+    }
+
+    // iOS（顯示順序：型號 → 系統版本 → 瀏覽器）
+    if (document.getElementById("ios-check").checked) {
+        const model = document.getElementById("ios-model").value.trim();
+        const os = formatOS("iOS", document.getElementById("ios-os").value);
+
+        const browsers = [];
         if (document.getElementById("ios-safari").checked) {
-            const v = document.getElementById("ios-os").value.trim();
-            if (v) parts.push(`Safari ${v}`);
+            const v = document.getElementById("ios-safari-version").value.trim();
+            if (v) browsers.push(`Safari ${v}`);
         }
-
         if (document.getElementById("ios-chrome").checked) {
             const v = document.getElementById("ios-chrome-version").value.trim();
-            if (v) parts.push(`Chrome ${v}`);
+            if (v) browsers.push(`Chrome ${v}`);
         }
-
         const on = document.getElementById("ios-other-name").value.trim();
         const ov = document.getElementById("ios-other-version").value.trim();
-        if (on) parts.push(ov ? `${on} ${ov}` : on);
+        if (on) browsers.push(ov ? `${on} ${ov}` : on);
+
+        const parts = [];
+        if (model) parts.push(`型號：${model}`);
+        if (os) parts.push(`系統：${os}`);
+        if (browsers.length) parts.push(`瀏覽器：${browsers.join("、")}`);
 
         let line = "．iOS";
-        if (os) line += `（${os}）`;
-        if (parts.length) line += `（瀏覽器：${parts.join("、")}）`;
+        if (parts.length) line += `（${parts.join("）（")}）`;
         list.push(line);
     }
 
     return list;
 }
 
+/* --- 版本（可複選）組裝（格式 A） --- */
+function getVersionLines(){
+    const lines = [];
+
+    if (document.getElementById("version-game-check").checked) {
+        const gv = document.getElementById("version-game").value.trim();
+        if (gv) lines.push(`．遊戲版本：${gv}`);
+    }
+
+    if (document.getElementById("version-bet-check").checked) {
+        const bv = document.getElementById("version-bet").value.trim();
+        if (bv) lines.push(`．投注歷程版本：${bv}`);
+    }
+
+    return lines;
+}
+
 /* --- 預覽內容更新 --- */
 function updateFullPreview(){
     const date=document.getElementById("incident_date").value;
     const tester=document.getElementById("tester").value;
-    const version=document.getElementById("version").value;
+    // ✅ 版本改為可複選（遊戲版本 / 投注歷程版本）
+    const versionLines = getVersionLines();
     const site=document.getElementById("site").value;
     const hall=document.getElementById("hall").value;
     const account=document.getElementById("account").value;
@@ -675,7 +832,8 @@ function updateFullPreview(){
 
     lines.push(`發生時間：${date}`);
     lines.push(`測試者：${tester}`);
-    lines.push(`版本：${version}`);
+    lines.push(`版本：`);
+    versionLines.forEach(l => lines.push(l));
     lines.push(`站別：${site}`);
     if (site === "試玩模式") {
     lines.push(`測試廳主：${hall}`);
@@ -698,9 +856,11 @@ lines.push(`裝置：`);
     lines.push("");
     lines.push("預期結果：");
     lines.push(exp);
+    if (remark) {
     lines.push("");
     lines.push("備註：");
     lines.push(remark);
+}
 
     document.getElementById("full-preview").value = lines.join("\n");
 }
@@ -785,8 +945,33 @@ document.getElementById("ios-os").addEventListener("input", () => {
 
 
     setupMemoryField("tester","tester");
-    setupMemoryField("version","version");
-    setupMemoryField("account","account");
+    setupMemoryField("version-game","version_game");
+    setupMemoryField("version-bet","version_bet");
+    setupMemoryField("account","account");    setupMemoryField("android-model","android_model");
+    setupMemoryField("ios-model","ios_model");
+    // ✅ 版本（可複選）— 顯示控制 + 即時預覽
+    function toggleVersionInputs(){
+        const showGame = document.getElementById("version-game-check").checked;
+        const showBet  = document.getElementById("version-bet-check").checked;
+
+        document.getElementById("version-game-wrapper").style.display = showGame ? "block" : "none";
+        document.getElementById("version-bet-wrapper").style.display  = showBet  ? "block" : "none";
+    }
+
+    ["version-game-check","version-bet-check"].forEach(id => {
+        document.getElementById(id).addEventListener("change", () => {
+            toggleVersionInputs();
+            updateFullPreview();
+        });
+    });
+
+    ["version-game","version-bet"].forEach(id => {
+        document.getElementById(id).addEventListener("input", updateFullPreview);
+    });
+
+    // 初始狀態
+    toggleVersionInputs();
+
 // 強化帳號欄位的即時預覽更新
 ["input","keyup","change","blur"].forEach(ev => {
     document.getElementById("account").addEventListener(ev, updateFullPreview);
@@ -817,10 +1002,11 @@ document.getElementById("ios-os").addEventListener("input", () => {
     });
 
     // 裝置欄位
-    [
-        "pc-browser",
+    [        "pc-browser",
+        "android-model",
         "android-os","android-browser",
         "ios-os",
+        "ios-model",
         "ios-safari-version","ios-chrome-version",
         "ios-other-name","ios-other-version"
     ].forEach(id=>{
