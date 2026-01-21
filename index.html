@@ -83,9 +83,19 @@
             box-sizing: border-box;
         }
 
+        /* ====== menu-only inputs（僅選單，不允許鍵盤輸入） ====== */
+        .menu-only{
+            caret-color: transparent;
+            cursor: pointer;
+        }
+        .menu-only::selection{ background: transparent; }
+
+
         textarea {
             width: 100%;
             resize: vertical;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+            font-variant-east-asian: proportional-width;
         }
 
         /* ====== 富文字編輯器 ====== */
@@ -135,6 +145,8 @@
             border-radius: 6px;
             border: 1px solid #ccc;
             margin-bottom: 10px;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+            font-variant-east-asian: proportional-width;
         }
 
         #full-preview {
@@ -142,7 +154,8 @@
             padding: 8px;
             border-radius: 8px;
             border: 1px solid #ccc;
-            font-family: "Courier New", monospace;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+            font-variant-east-asian: proportional-width;
             background-color: #fdfdfd;
         }
 
@@ -239,6 +252,50 @@
             flex-wrap: wrap;
             gap: 6px;
         }
+
+
+
+        /* ====== 遊戲搜尋欄位：寬度跟著文字（避免 placeholder 被截斷，也不留多餘空白） ====== */
+        #game-select{
+            display: inline-block;
+            width: auto;        /* 實際寬度由 JS 量測後設定 */
+            max-width: 100%;
+        }
+
+        /* ====== 已選站別（chip 顯示在選擇欄位右側） ====== */
+        .site-inline-select{
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            flex: 1;
+            min-width: 0;
+        }
+        .site-select-wrap{
+            width: 220px;
+            flex: 0 0 auto;
+            position: relative;
+        }
+        .site-select-wrap input{ width: 100%; }
+        #selected-sites{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            min-height: 28px;
+            align-content: flex-start;
+            margin-top: 0px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* === 站別與站別設定區塊之間更緊密 === */
+        .form-row:has(.site-inline-select){
+            margin-bottom: 0.35rem;
+        }
+        .form-row:has(#site-config-container){
+            margin-top: 0px;
+        }
+
+
         .game-chip {
             display: inline-flex;
             align-items: center;
@@ -261,6 +318,127 @@
             color: #c00;
         }
 
+
+
+
+        /* ====== 站別設定區塊（與 chip 樣式做區隔） ====== */
+        .site-config-container{ margin-top: 2px; width: 100%; }
+
+        .site-config-card{
+            background: #ffffff;
+            border: 1px solid #e6e6e6;
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin: 8px 0 10px;
+        }
+
+        .site-config-header{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        /* 站別標題：用「小標籤/章節」風格，避免和 chip（藍色膠囊）長得一樣 */
+        .site-config-title{
+            font-weight: 700;
+            font-size: 0.92rem;
+            color: #2b2b2b;
+            background: #f3f3f3;
+            border: 1px solid #e3e3e3;
+            border-left: 4px solid #4a90e2;
+            padding: 4px 10px;
+            border-radius: 8px;
+            line-height: 1.1;
+        }
+
+        .site-config-row{
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-top: 2px;
+        }
+        .site-config-row label{
+            min-width: 120px;
+            font-weight: 500;
+            padding-top: 6px;
+        }
+
+        .site-config-row .autocomplete-wrapper{ flex: 1; min-width: 0; }
+
+        .site-config-row .field{ flex: 1; min-width: 0; }
+
+        /* 站別/廳主/帳號的多選 chip 容器：預留一行高度，避免推擠 */
+        .selected-chips{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            min-height: 26px; /* 預留一行 chip 高度：避免加入後微推擠 */
+            align-content: flex-start;
+        }
+
+        /* 每站別：廳主/帳號一對一綁定 UI */
+        .pair-add-line{
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .pair-add-line .pair-hall-wrap{ width: 260px; flex: 0 0 auto; }
+        .pair-add-line .pair-account-wrap{ width: 240px; flex: 0 0 auto; }
+        /* 試玩模式：保留帳號欄寬度以對齊版面，但不顯示內容 */
+        .trial-empty{
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .pair-add-line button{
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid #cfd8e3;
+            background: #f7f9fc;
+            cursor: pointer;
+        }
+        .pair-add-line button:hover{ background:#eef3fb; }
+
+        /* 每站別：版本（遊戲版本 / 投注歷程版本） */
+        /* 目標：勾選後出現輸入框時不推擠膠囊高度 → 先預留輸入框高度 */
+        .site-version-block{
+            margin-top: 4px; /* 更緊密 */
+            display: flex;
+            flex-direction: column;
+            gap: 4px; /* 更緊密 */
+        }
+        .site-version-line{
+            /* 讓兩個輸入框起點完全對齊：固定第一欄寬度 */
+            display: grid;
+            grid-template-columns: 150px 300px;
+            align-items: center;
+            column-gap: 10px;
+        }
+        .site-version-line label{
+            width: 150px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0;
+            white-space: nowrap;
+        }
+        .site-version-line .autocomplete-wrapper{
+            width: 300px;
+            flex: 0 0 auto;
+            min-width: 0;
+            display: block; /* 永遠保留佔位，避免勾選後推擠 */
+        }
+        .site-version-line .autocomplete-wrapper.v-hidden{
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* 站別輸入框短一點：右側留給已選 chip */
+        .site-select-wrap{ width: 220px; }
+        .site-select-wrap input{ width: 100%; }
 
         /* ====== ✅ 新增：裝置型號欄位 ====== */
         .device-row.with-model {
@@ -364,7 +542,7 @@ select option[disabled]{display:none;}
             <label>遊戲：</label>
             <div class="autocomplete-wrapper">
                 <input type="text" id="game-select" autocomplete="new-password" name="nohistory-game"
-                    style="width: 345px;" placeholder="搜尋遊戲（GameCode或名稱），可複選">
+                     placeholder="搜尋遊戲（GameCode或名稱），可複選">
                 <div class="suggestions" id="game-suggestions"></div>
                 <div id="selected-games" style="margin-top:6px;font-size:0.9rem;color:#333;"></div>
             </div>
@@ -395,64 +573,21 @@ select option[disabled]{display:none;}
                 <div class="suggestions"></div>
             </div>
         </div>
-
-
-        <div class="form-row">
-            <label>版本：</label>
-
-            <!-- ✅ 版本（可複選）：遊戲版本 / 投注歷程版本 -->
-            <div style="display:flex;flex-direction:column;gap:10px;flex:1;">
-
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <label style="min-width:120px;font-weight:500;display:flex;align-items:center;gap:6px;margin:0;">
-                        <input type="checkbox" id="version-game-check"> 遊戲版本
-                    </label>
-                    <div class="autocomplete-wrapper" id="version-game-wrapper" style="display:none;">
-                        <input type="text" id="version-game" class="memory-input"
-                            data-memory-key="version_game" autocomplete="new-password" name="nohistory-version-game"
-                            placeholder="輸入遊戲版本號碼">
-                        <div class="suggestions"></div>
-                    </div>
-                </div>
-
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <label style="min-width:120px;font-weight:500;display:flex;align-items:center;gap:6px;margin:0;">
-                        <input type="checkbox" id="version-bet-check"> 投注歷程版本
-                    </label>
-                    <div class="autocomplete-wrapper" id="version-bet-wrapper" style="display:none;">
-                        <input type="text" id="version-bet" class="memory-input"
-                            data-memory-key="version_bet" autocomplete="new-password" name="nohistory-version-bet"
-                            placeholder="輸入投注歷程版本號碼">
-                        <div class="suggestions"></div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
         <div class="form-row">
             <label>站別：</label>
-            <select id="site">
-                <option value="測試站">測試站</option>
-                <option value="正式站">正式站</option>
-                <option value="開發站">開發站</option>
-                <option value="試玩模式">試玩模式</option>
-            </select>
+            <div class="site-inline-select">
+                <div class="autocomplete-wrapper site-select-wrap">
+                    <input type="text" id="site-select" class="menu-only" readonly inputmode="none" autocomplete="new-password" name="nohistory-site"
+                        placeholder="搜尋站別，可複選">
+                    <div class="suggestions" id="site-suggestions"></div>
+                </div>
+                <div id="selected-sites"></div>
+            </div>
         </div>
 
         <div class="form-row">
             <label>測試廳主／帳號：</label>
-            <select id="hall">
-                <option value="Tidy遊戲商測試廳">Tidy遊戲商測試廳</option>
-                <option value="Tidy遊戲級距測試廳">Tidy遊戲級距測試廳</option>
-                <option value="DB TEST">DB TEST</option>
-            </select>
-            <span class="slash">/</span>
-            <div class="autocomplete-wrapper inline">
-                <input type="text" id="account" class="memory-input" autocomplete="new-password"
-                    name="nohistory-account" data-memory-key="account">
-                <div class="suggestions"></div>
-            </div>
+            <div id="site-config-container" class="site-config-container"></div>
         </div>
 
         <!-- 裝置 -->
@@ -622,7 +757,51 @@ const gameList=[["Game101","瘋狂實驗室"],["Game102","開運金獅"],["Game1
 const gameInput=document.getElementById("game-select");
 const gameSuggest=document.getElementById("game-suggestions");
 
+// ====== 遊戲搜尋欄位自動調整寬度（依 placeholder / 輸入內容量測） ======
+function _measureTextWidth(text, el){
+    const cs = getComputedStyle(el);
+    const font = `${cs.fontStyle} ${cs.fontVariant} ${cs.fontWeight} ${cs.fontSize} / ${cs.lineHeight} ${cs.fontFamily}`;
+    const canvas = _measureTextWidth._c || (_measureTextWidth._c = document.createElement('canvas'));
+    const ctx = canvas.getContext('2d');
+    ctx.font = font;
+    return ctx.measureText(text || '').width;
+}
+
+function _autoSizeInputToText(inputEl, text){
+    const cs = getComputedStyle(inputEl);
+    const pad = (parseFloat(cs.paddingLeft)||0) + (parseFloat(cs.paddingRight)||0);
+    const border = (parseFloat(cs.borderLeftWidth)||0) + (parseFloat(cs.borderRightWidth)||0);
+    let w = Math.ceil(_measureTextWidth(text, inputEl) + pad + border + 2); // +2: 保險避免被吃字
+
+    // 不要超過父容器寬度
+    const parent = inputEl.parentElement;
+    if(parent){
+        const max = parent.clientWidth;
+        if(max && w > max) w = max;
+    }
+    // 避免太窄
+    if(w < 120) w = 120;
+
+    inputEl.style.width = w + 'px';
+}
+
+function autoSizeGameInput(){
+    if(!gameInput) return;
+    const text = (gameInput.value && gameInput.value.trim()) ? gameInput.value : gameInput.placeholder;
+    _autoSizeInputToText(gameInput, text);
+}
+
+
 let selectedGames = []; // [{id,name}]
+
+// 初始 + 互動時自動調整欄位寬度
+autoSizeGameInput();
+gameInput.addEventListener('input', autoSizeGameInput);
+window.addEventListener('resize', () => {
+    // 讓 reflow 後再量測一次
+    requestAnimationFrame(autoSizeGameInput);
+});
+
 
 function renderSelectedGames(){
     const box = document.getElementById("selected-games");
@@ -661,6 +840,7 @@ function renderGameList(keyword=""){
     blankDiv.addEventListener("mousedown", () => {
         selectedGames = [];
         gameInput.value = "";
+        autoSizeGameInput();
         renderSelectedGames();
         gameSuggest.style.display = "none";
         updateTitle();
@@ -676,6 +856,7 @@ function renderGameList(keyword=""){
                 selectedGames.push({id,name});
             }
             gameInput.value = "";
+            autoSizeGameInput();
             renderSelectedGames();
             gameSuggest.style.display="none";
             updateTitle();
@@ -694,6 +875,45 @@ document.addEventListener("click",(e)=>{
     if(!gameInput.contains(e.target)) gameSuggest.style.display="none";
 });
 
+
+
+/* --- 符號全形化（僅轉換 ASCII 符號） --- */
+function toFullWidthSymbols(str){
+    if (str == null) return "";
+    return String(str)
+        .replace(/\\/g, "＼")
+        .replace(/\//g, "／")
+        .replace(/_/g, "＿")
+        .replace(/-/g, "－")
+        .replace(/:/g, "：")
+        .replace(/;/g, "；")
+        .replace(/,/g, "，")
+        .replace(/\./g, "．")
+        .replace(/\?/g, "？")
+        .replace(/!/g, "！")
+        .replace(/\(/g, "（")
+        .replace(/\)/g, "）")
+        .replace(/\[/g, "［")
+        .replace(/\]/g, "］")
+        .replace(/\{/g, "｛")
+        .replace(/\}/g, "｝")
+        .replace(/</g, "＜")
+        .replace(/>/g, "＞")
+        .replace(/\+/g, "＋")
+        .replace(/=/g, "＝")
+        .replace(/\*/g, "＊")
+        .replace(/@/g, "＠")
+        .replace(/#/g, "＃")
+        .replace(/%/g, "％")
+        .replace(/&/g, "＆")
+        .replace(/\^/g, "＾")
+        .replace(/\|/g, "｜")
+        .replace(/"/g, "＂")
+        .replace(/'/g, "＇")
+        .replace(/~/g, "～")
+        // 日期維持半形連字號（YYYY-MM-DD）
+        .replace(/(\d{4})－(\d{2})－(\d{2})/g, "$1-$2-$3");
+}
 /* --- 標題生成 --- */
 function updateTitle(){
     const desc=document.getElementById("problem-desc").value.trim();
@@ -710,7 +930,7 @@ function updateTitle(){
         result = desc;
     }
 
-    document.getElementById("title-preview").value=result;
+    document.getElementById("title-preview").value = toFullWidthSymbols(result);
     updateFullPreview();
 }
 document.getElementById("problem-desc").addEventListener("input",updateTitle);
@@ -734,135 +954,284 @@ function formatBrowser(value){
 }
 
 /* --- 裝置資料組裝（回傳每裝置一行字串） --- */
+
 function getDeviceLines(){
-    const list = [];
+    const lines = [];
 
     // 去除 formatBrowser() 可能自帶的「瀏覽器：」前綴
     const normBrowser = (s) => (s || "").replace(/^瀏覽器：\s*/, "").trim();
+    const joinSlash = (arr) => arr.filter(Boolean).join("／");
 
-    // PC（顯示瀏覽器）
-    if (document.getElementById("device-pc").checked) {
+    const pcOn = document.getElementById("device-pc").checked;
+    const androidOn = document.getElementById("device-android").checked;
+    const iosOn = document.getElementById("ios-check").checked;
+
+    const total = (pcOn?1:0) + (androidOn?1:0) + (iosOn?1:0);
+
+    // PC 詳細：Chrome 111
+    const getPC = () => {
         const br = normBrowser(formatBrowser(document.getElementById("pc-browser").value));
-        let line = "．PC";
-        if (br) line += `（瀏覽器：${br}）`;
-        list.push(line);
-    }
+        return br || ""; // 允許空
+    };
 
-    // Android（顯示順序：型號 → 系統版本 → 瀏覽器）
-    if (document.getElementById("device-android").checked) {
-        const model = document.getElementById("android-model").value.trim();
-        const os = formatOS("Android", document.getElementById("android-os").value);
+    // Android 詳細：Android 456／Chrome 789（如有型號則：Pixel 7／Android 456／Chrome 789）
+    const getAndroid = () => {
+        const model = (document.getElementById("android-model").value || "").trim();
+        const osVal = (document.getElementById("android-os").value || "").trim();
         const br = normBrowser(formatBrowser(document.getElementById("android-browser").value));
 
+        const platform = osVal ? `Android ${osVal}` : "Android";
         const parts = [];
-        if (model) parts.push(`型號：${model}`);
-        if (os) parts.push(`系統：${os}`);
-        if (br) parts.push(`瀏覽器：${br}`);
+        if (model) parts.push(model);
+        parts.push(platform);
+        if (br) parts.push(br);
 
-        let line = "．Android";
-        if (parts.length) line += `（${parts.join("）（")}）`;
-        list.push(line);
-    }
+        return joinSlash(parts);
+    };
 
-    // iOS（顯示順序：型號 → 系統版本 → 瀏覽器）
-    if (document.getElementById("ios-check").checked) {
-        const model = document.getElementById("ios-model").value.trim();
-        const os = formatOS("iOS", document.getElementById("ios-os").value);
+    // iOS 詳細：iOS 222／Safari 222、Chrome 333、Egg 11451（如有型號則：iPhone 13／iOS 222／...）
+    const getIOS = () => {
+        const model = (document.getElementById("ios-model").value || "").trim();
+        const osVal = (document.getElementById("ios-os").value || "").trim();
 
         const browsers = [];
         if (document.getElementById("ios-safari").checked) {
-            const v = document.getElementById("ios-safari-version").value.trim();
-            if (v) browsers.push(`Safari ${v}`);
+            const v = (document.getElementById("ios-safari-version").value || "").trim();
+            browsers.push(v ? `Safari ${v}` : "Safari");
         }
         if (document.getElementById("ios-chrome").checked) {
-            const v = document.getElementById("ios-chrome-version").value.trim();
-            if (v) browsers.push(`Chrome ${v}`);
+            const v = (document.getElementById("ios-chrome-version").value || "").trim();
+            browsers.push(v ? `Chrome ${v}` : "Chrome");
         }
-        const on = document.getElementById("ios-other-name").value.trim();
-        const ov = document.getElementById("ios-other-version").value.trim();
-        if (on) browsers.push(ov ? `${on} ${ov}` : on);
+        const on = (document.getElementById("ios-other-name").value || "").trim();
+        const ov = (document.getElementById("ios-other-version").value || "").trim();
+        if (on || ov) browsers.push(`${on || "其他"}${ov ? " " + ov : ""}`.trim());
+
+        const platform = osVal ? `iOS ${osVal}` : "iOS";
 
         const parts = [];
-        if (model) parts.push(`型號：${model}`);
-        if (os) parts.push(`系統：${os}`);
-        if (browsers.length) parts.push(`瀏覽器：${browsers.join("、")}`);
+        if (model) parts.push(model);
+        parts.push(platform);
+        if (browsers.length) parts.push(browsers.join("、"));
 
-        let line = "．iOS";
-        if (parts.length) line += `（${parts.join("）（")}）`;
-        list.push(line);
+        return joinSlash(parts);
+    };
+
+    // 無選擇：略過整段（由呼叫端處理）
+    if (!total) return lines;
+
+    // 單選：若是 Android / iOS，使用「．手機：...」單行；若是 PC，使用「．PC：...」單行
+    if (total === 1) {
+        if (androidOn) {
+            lines.push(`．手機：${getAndroid()}`);
+            return lines;
+        }
+        if (iosOn) {
+            lines.push(`．手機：${getIOS()}`);
+            return lines;
+        }
+        if (pcOn) {
+            const pc = getPC();
+            lines.push(pc ? `．PC：${pc}` : "．PC");
+            return lines;
+        }
     }
 
-    return list;
-}
-
-/* --- 版本（可複選）組裝（格式 A） --- */
-function getVersionLines(){
-    const lines = [];
-
-    if (document.getElementById("version-game-check").checked) {
-        const gv = document.getElementById("version-game").value.trim();
-        if (gv) lines.push(`．遊戲版本：${gv}`);
+    // 多選：PC 單列；手機依選擇數決定呈現（單選手機＝單行；Android+iOS＝群組巢狀）
+    if (pcOn) {
+        const pc = getPC();
+        lines.push(pc ? `．PC：${pc}` : "．PC");
     }
 
-    if (document.getElementById("version-bet-check").checked) {
-        const bv = document.getElementById("version-bet").value.trim();
-        if (bv) lines.push(`．投注歷程版本：${bv}`);
+    // 手機只有單選（不論是否同時有 PC）→ 單行呈現：．手機：iOS ... / Android ...
+    if ((androidOn || iosOn) && !(androidOn && iosOn)) {
+        if (androidOn) lines.push(`．手機：${getAndroid()}`);
+        if (iosOn) lines.push(`．手機：${getIOS()}`);
+        return lines;
+    }
+
+    // Android + iOS 同時勾選 → 手機群組巢狀條列
+    if (androidOn && iosOn) {
+        lines.push("．手機：");
+        lines.push(`　．${getAndroid()}`);
+        lines.push(`　．${getIOS()}`);
     }
 
     return lines;
 }
 
 /* --- 預覽內容更新 --- */
-function updateFullPreview(){
-    const date=document.getElementById("incident_date").value;
-    const tester=document.getElementById("tester").value;
-    // ✅ 版本改為可複選（遊戲版本 / 投注歷程版本）
-    const versionLines = getVersionLines();
-    const site=document.getElementById("site").value;
-    const hall=document.getElementById("hall").value;
-    const account=document.getElementById("account").value;
-    const order = document.getElementById("order_id").value.trim() || "-";
 
-    const op=document.getElementById("operation_editor").innerText.trim();
-    const act=document.getElementById("actual_editor").innerText.trim();
-    const exp=document.getElementById("expected_editor").innerText.trim();
-    const remark=document.getElementById("remark_editor").innerText.trim();
+// ✅ 同步「每站別版本」DOM → window.siteConfigs（保險用）
+function syncSiteVersionsFromDOM(){
+    const sites = (window.selectedSites || []);
+    sites.forEach(siteName => {
+        const card = document.querySelector(`.site-config-card[data-site="${siteName}"]`);
+        if(!card) return;
+        const cfg = normSiteCfg(siteName);
+
+        const gameChk = card.querySelector(`input[type="checkbox"][data-site="${siteName}"][data-vkey="gameEnabled"]`);
+        const betChk  = card.querySelector(`input[type="checkbox"][data-site="${siteName}"][data-vkey="betEnabled"]`);
+        const gameInp = card.querySelector(`input[type="text"][data-site="${siteName}"][data-vkey="game"]`);
+        const betInp  = card.querySelector(`input[type="text"][data-site="${siteName}"][data-vkey="bet"]`);
+
+        if(gameChk) cfg.versions.gameEnabled = !!gameChk.checked;
+        if(betChk)  cfg.versions.betEnabled  = !!betChk.checked;
+        if(gameInp) cfg.versions.game        = (gameInp.value || "").trim();
+        if(betInp)  cfg.versions.bet         = (betInp.value || "").trim();
+
+        if (siteName === "試玩模式") {
+            cfg.versions.betEnabled = false;
+            cfg.versions.bet = "";
+        }
+    });
+}
+
+function updateFullPreview(){
+    const date = document.getElementById("incident_date").value;
+    const tester = document.getElementById("tester").value;
+    const selectedSitesList = (window.selectedSites || []);
+    const siteConfigs = (window.siteConfigs || {});
+    const orderRaw = document.getElementById("order_id").value.trim();
+
+    // ✅ 保險：同步每站別版本（避免瀏覽器自動回填 input 但未觸發 input 事件）
+    syncSiteVersionsFromDOM();
+
+    const op = document.getElementById("operation_editor").innerText.trim();
+    const act = document.getElementById("actual_editor").innerText.trim();
+    const exp = document.getElementById("expected_editor").innerText.trim();
+    const remark = document.getElementById("remark_editor").innerText.trim();
 
     const lines = [];
 
+    // Header
     lines.push(`發生時間：${date}`);
     lines.push(`測試者：${tester}`);
-    lines.push(`版本：`);
-    versionLines.forEach(l => lines.push(l));
-    lines.push(`站別：${site}`);
-    if (site === "試玩模式") {
-    lines.push(`測試廳主：${hall}`);
-} else {
-    lines.push(`測試廳主/帳號：${hall} / ${account}`);
-}
+    lines.push(`站別：${selectedSitesList.length ? selectedSitesList.join("、") : "-"}`);
+    lines.push("");
 
+    // 測試廳主／帳號 & 版本（單站別：不重複站別名；複數站別：站別底下巢狀條列）
+    if (selectedSitesList.length === 0) {
+        lines.push("測試廳主／帳號：");
+        lines.push("．-");
+        lines.push("");
+
+        lines.push("版本：");
+        lines.push("．-");
+        lines.push("");
+    } else if (selectedSitesList.length === 1) {
+        const siteName = selectedSitesList[0];
+        const cfg = siteConfigs[siteName] || { halls: [], pairs: [], versions: {} };
+
+        // 測試廳主／帳號
+        lines.push("測試廳主／帳號：");
+        if (siteName === "試玩模式") {
+            const halls = (cfg.halls && cfg.halls.length) ? cfg.halls : [];
+            if (halls.length) halls.forEach(h => lines.push(`．${h}`));
+            else lines.push("．-");
+        } else {
+            const pairs = (cfg.pairs && cfg.pairs.length) ? cfg.pairs : [];
+            if (pairs.length) pairs.forEach(p => lines.push(`．${p.hall}／${p.account}`));
+            else lines.push("．-");
+        }
+        lines.push("");
+
+        // 版本
+        lines.push("版本：");
+        {
+            const v = cfg.versions || {};
+            let hasAny = false;
+
+            if (v.gameEnabled) {
+                const val = String(v.game || "").trim();
+                lines.push(`．遊戲版本：${val || "-"}`);
+                hasAny = true;
+            }
+            if (siteName !== "試玩模式" && v.betEnabled) {
+                const val = String(v.bet || "").trim();
+                lines.push(`．投注歷程版本：${val || "-"}`);
+                hasAny = true;
+            }
+
+            if (!hasAny) lines.push("．-");
+        }
+        lines.push("");
+    } else {
+        // 複數站別：站別底下巢狀條列
+        lines.push("測試廳主／帳號：");
+        selectedSitesList.forEach(siteName => {
+            const cfg = siteConfigs[siteName] || { halls: [], pairs: [], versions: {} };
+            lines.push(`．${siteName}：`);
+
+            if (siteName === "試玩模式") {
+                const halls = (cfg.halls && cfg.halls.length) ? cfg.halls : [];
+                if (halls.length) halls.forEach(h => lines.push(`　．${h}`));
+                else lines.push("　．-");
+            } else {
+                const pairs = (cfg.pairs && cfg.pairs.length) ? cfg.pairs : [];
+                if (pairs.length) pairs.forEach(p => lines.push(`　．${p.hall}／${p.account}`));
+                else lines.push("　．-");
+            }
+        });
+        lines.push("");
+
+        // 版本（複選：站別底下再條列）
+        lines.push("版本：");
+        selectedSitesList.forEach(siteName => {
+            const cfg = siteConfigs[siteName] || {};
+            const v = cfg.versions || {};
+
+            lines.push(`．${siteName}：`);
+
+            const parts = [];
+            if (v.gameEnabled) {
+                const val = String(v.game || "").trim();
+                parts.push(`　．遊戲版本：${val || "-"}`);
+            }
+            if (siteName !== "試玩模式" && v.betEnabled) {
+                const val = String(v.bet || "").trim();
+                parts.push(`　．投注歷程版本：${val || "-"}`);
+            }
+
+            if (parts.length) parts.forEach(p => lines.push(p));
+            else lines.push("　．-");
+        });
+        lines.push("");
+    }
+
+    // 裝置（空內容整段略過）
     const deviceLines = getDeviceLines();
-    
-lines.push(`裝置：`);
-    deviceLines.forEach(l => lines.push(l));
+    if (deviceLines.length) {
+        lines.push("裝置：");
+        deviceLines.forEach(l => lines.push(l));
+        lines.push("");
+    }
 
-    lines.push(`注單編號：${order}`);
-    lines.push("");
+    // 注單編號（空內容整段略過）
+    if (orderRaw) {
+        lines.push(`注單編號：${orderRaw}`);
+        lines.push("");
+    }
+
+    // 操作 / 實際結果 / 預期結果（保留段落結構，段落間固定空一行）
     lines.push("操作：");
-    lines.push(op);
+    if (op) lines.push(op);
     lines.push("");
-    lines.push("實際結果：");
-    lines.push(act);
-    lines.push("");
-    lines.push("預期結果：");
-    lines.push(exp);
-    if (remark) {
-    lines.push("");
-    lines.push("備註：");
-    lines.push(remark);
-}
 
-    document.getElementById("full-preview").value = lines.join("\n");
+    lines.push("實際結果：");
+    if (act) lines.push(act);
+    lines.push("");
+
+    lines.push("預期結果：");
+    if (exp) lines.push(exp);
+
+    if (remark) {
+        lines.push("");
+        lines.push("備註：");
+        lines.push(remark);
+    }
+
+    document.getElementById("full-preview").value = toFullWidthSymbols(lines.join("\n"));
 }
 
 /* --- 複製 --- */
@@ -918,72 +1287,824 @@ function setupMemoryField(id,key){
     });
 }
 
+// 供動態產生的 input 使用（例如：每站別版本欄位）
+function setupMemoryFieldElement(input,key){
+    if(!input || !key) return;
+    const wrap=input.closest(".autocomplete-wrapper");
+    if(!wrap) return;
+    const box=wrap.querySelector(".suggestions");
+    if(!box) return;
+    let list=loadMemory(key);
+
+    function render(filter=""){
+        const kw=filter.toLowerCase();
+        box.innerHTML="";
+        const matches=list.filter(v=>v.toLowerCase().includes(kw));
+        matches.forEach(v=>{
+            const div=document.createElement("div");
+            div.className="suggestion-item";
+            div.textContent=v;
+            div.addEventListener("mousedown",()=>{
+                input.value=v;
+                box.style.display="none";
+                updateFullPreview();
+            });
+            box.appendChild(div);
+        });
+        box.style.display = matches.length ? "block":"none";
+    }
+
+    input.addEventListener("focus",()=>render(""));
+    input.addEventListener("input",()=>render(input.value));
+    input.addEventListener("blur",()=>{
+        const v=input.value.trim();
+        if(v && !list.includes(v)){
+            list.push(v);
+            saveMemory(key,list);
+        }
+        setTimeout(()=>box.style.display="none",120);
+    });
+}
+
+
+
+/* --- autocomplete 站別搜尋（✅ 複選版；已選 chip 顯示在輸入框右側） --- */
+const siteInput = document.getElementById("site-select");
+const siteSuggest = document.getElementById("site-suggestions");
+
+// ✅ 站別：僅選單（不允許文字輸入）
+if (siteInput){
+    siteInput.readOnly = true;
+    siteInput.setAttribute("inputmode","none");
+    siteInput.classList.add("menu-only");
+    siteInput.addEventListener("keydown", (e)=>{
+        if (e.key !== "Tab" && e.key !== "Shift") e.preventDefault();
+    });
+    siteInput.addEventListener("click", ()=> renderSiteList(""));
+}
+
+const siteList = ["測試站","正式站","開發站","試玩模式"];
+
+window.selectedSites = window.selectedSites || [];
+window.siteConfigs = window.siteConfigs || {}; // { [siteName]: {halls:[], pairs:[], versions:{...}} }
+
+function normSiteCfg(siteName){
+    if(!window.siteConfigs[siteName]){
+        window.siteConfigs[siteName] = { halls: [], pairs: [], versions: { gameEnabled: false, game: "", betEnabled: false, bet: "" } };
+    }
+    const cfg = window.siteConfigs[siteName];
+    if(!cfg.halls) cfg.halls = [];
+    if(!cfg.pairs) cfg.pairs = [];
+    if(!cfg.versions) cfg.versions = { gameEnabled: false, game: "", betEnabled: false, bet: "" };
+    if(typeof cfg.versions.gameEnabled !== "boolean") cfg.versions.gameEnabled = false;
+    if(typeof cfg.versions.betEnabled  !== "boolean") cfg.versions.betEnabled  = false;
+    if(typeof cfg.versions.game !== "string") cfg.versions.game = "";
+    if(typeof cfg.versions.bet  !== "string") cfg.versions.bet  = "";
+
+    // 舊版相容：若曾使用 accounts（已停用），嘗試轉為 pairs（以索引配對）
+    if(cfg.accounts && Array.isArray(cfg.accounts) && cfg.accounts.length && (!cfg.pairs || !cfg.pairs.length)){
+        const halls = Array.isArray(cfg.halls) ? cfg.halls : [];
+        const accs  = cfg.accounts;
+        const pairs = [];
+        const n = Math.min(halls.length, accs.length);
+        for(let i=0;i<n;i++){
+            const h = (halls[i]||"").trim();
+            const a = (accs[i]||"").trim();
+            if(h && a) pairs.push({ hall: h, account: a });
+        }
+        cfg.pairs = pairs;
+    }
+
+    return cfg;
+}
+
+function renderSelectedSites(){
+    const box = document.getElementById("selected-sites");
+    box.innerHTML = "";
+
+    window.selectedSites.forEach((s, idx) => {
+        const chip = document.createElement("div");
+        chip.className = "game-chip";
+        chip.textContent = s;
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = "×";
+        btn.addEventListener("click", () => {
+            window.selectedSites.splice(idx, 1);
+            // 同步刪除設定
+            delete window.siteConfigs[s];
+            renderSelectedSites();
+            renderSiteConfigBlocks();
+            updateFullPreview();
+        });
+
+        chip.appendChild(btn);
+        box.appendChild(chip);
+    });
+}
+
+function renderSiteList(keyword=""){
+    const kw = keyword.trim().toLowerCase();
+    siteSuggest.innerHTML = "";
+
+    // 清除全部
+    const clearDiv = document.createElement("div");
+    clearDiv.className = "suggestion-item";
+    clearDiv.textContent = "(清除全部)";
+    clearDiv.addEventListener("mousedown", () => {
+        window.selectedSites = [];
+        window.siteConfigs = {};
+        siteInput.value = "";
+        renderSelectedSites();
+        renderSiteConfigBlocks();
+        siteSuggest.style.display = "none";
+        updateFullPreview();
+    });
+    siteSuggest.appendChild(clearDiv);
+
+    const matches = siteList.filter(s => s.toLowerCase().includes(kw));
+    matches.forEach((s) => {
+        const div = document.createElement("div");
+        div.className = "suggestion-item";
+        div.textContent = s;
+        div.addEventListener("mousedown", () => {
+            // 試玩模式：保持互斥（只留它）
+            if (s === "試玩模式") {
+                window.selectedSites = ["試玩模式"];
+                window.siteConfigs = { "試玩模式": normSiteCfg("試玩模式") };
+            } else {
+                // 若目前是試玩模式，先移除
+                window.selectedSites = window.selectedSites.filter(x => x !== "試玩模式");
+                if (!window.selectedSites.includes(s)) window.selectedSites.push(s);
+                normSiteCfg(s);
+            }
+
+            siteInput.value = "";
+            renderSelectedSites();
+            renderSiteConfigBlocks();
+            siteSuggest.style.display = "none";
+            updateFullPreview();
+        });
+        siteSuggest.appendChild(div);
+    });
+
+    siteSuggest.style.display = matches.length ? "block" : "none";
+}
+
+siteInput.addEventListener("focus", () => renderSiteList(""));
+siteInput.addEventListener("input", () => renderSiteList(siteInput.value));
+document.addEventListener("click", (e) => {
+    if (!siteInput.contains(e.target)) siteSuggest.style.display = "none";
+});
+
+/* --- 各站別：廳主／帳號（可搜尋複選） --- */
+const HALL_OPTIONS = ["Tidy遊戲商測試廳","Tidy遊戲級距測試廳","DB TEST"]; // 可自行擴充
+
+function makeMultiSelect({
+    container,
+    options,
+    placeholder,
+    getSelected,
+    setSelected,
+    memoryKey
+}){
+    const wrap = document.createElement("div");
+    wrap.className = "autocomplete-wrapper";
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.autocomplete = "new-password";
+    input.placeholder = placeholder;
+
+    const sugg = document.createElement("div");
+    sugg.className = "suggestions";
+
+    const selectedBox = document.createElement("div");
+    selectedBox.style.display = "flex";
+    selectedBox.style.flexWrap = "wrap";
+    selectedBox.style.gap = "4px";
+    selectedBox.style.minHeight = "34px";
+    selectedBox.style.visibility = "hidden";
+    selectedBox.style.marginTop = "1px";
+
+    wrap.appendChild(input);
+    wrap.appendChild(sugg);
+
+    container.appendChild(wrap);
+    container.appendChild(selectedBox);
+
+    let memList = [];
+    if (memoryKey){
+        try{ memList = JSON.parse(localStorage.getItem(memoryKey)) || []; }catch{ memList=[]; }
+    }
+
+    function saveMem(v){
+        if(!memoryKey) return;
+        if(v && !memList.includes(v)){
+            memList.push(v);
+            localStorage.setItem(memoryKey, JSON.stringify(memList));
+        }
+    }
+
+    function renderSelected(){
+        selectedBox.innerHTML = "";
+        getSelected().forEach((v, idx) => {
+            const chip = document.createElement("div");
+            chip.className = "game-chip";
+            chip.textContent = v;
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.textContent = "×";
+            btn.addEventListener("click", () => {
+                const arr = getSelected().slice();
+                arr.splice(idx, 1);
+                setSelected(arr);
+                renderSelected();
+                updateFullPreview();
+            });
+            chip.appendChild(btn);
+            selectedBox.appendChild(chip);
+        });
+        // ✅ 預留高度但避免空白太突兀：沒選項時先隱藏（仍保留高度）
+        selectedBox.style.visibility = getSelected().length ? "visible" : "hidden";
+    }
+
+    function renderSuggest(filter=""){
+        const kw = filter.trim().toLowerCase();
+        sugg.innerHTML = "";
+
+        const all = (options || []).concat(memList);
+        const uniq = Array.from(new Set(all));
+        const matches = uniq.filter(v => v.toLowerCase().includes(kw));
+
+        // 清除全部
+        const clearDiv = document.createElement("div");
+        clearDiv.className = "suggestion-item";
+        clearDiv.textContent = "(清除全部)";
+        clearDiv.addEventListener("mousedown", () => {
+            setSelected([]);
+            input.value = "";
+            sugg.style.display = "none";
+            renderSelected();
+            updateFullPreview();
+        });
+        sugg.appendChild(clearDiv);
+
+        matches.forEach(v => {
+            const div = document.createElement("div");
+            div.className = "suggestion-item";
+            div.textContent = v;
+            div.addEventListener("mousedown", () => {
+                const arr = getSelected().slice();
+                if(!arr.includes(v)) arr.push(v);
+                setSelected(arr);
+                input.value = "";
+                renderSelected();
+                sugg.style.display = "none";
+                saveMem(v);
+                updateFullPreview();
+            });
+            sugg.appendChild(div);
+        });
+
+        sugg.style.display = matches.length ? "block" : "none";
+    }
+
+    input.addEventListener("focus", () => renderSuggest(""));
+    input.addEventListener("input", () => renderSuggest(input.value));
+
+    // 允許直接輸入 Enter 加入（適用帳號）
+    input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter"){
+            const v = input.value.trim();
+            if(v){
+                const arr = getSelected().slice();
+                if(!arr.includes(v)) arr.push(v);
+                setSelected(arr);
+                input.value = "";
+                renderSelected();
+                saveMem(v);
+                sugg.style.display = "none";
+                updateFullPreview();
+            }
+            e.preventDefault();
+        }
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!wrap.contains(e.target)) sugg.style.display = "none";
+    });
+
+    renderSelected();
+    return { renderSelected };
+}
+
+function renderSiteConfigBlocks(){
+    const host = document.getElementById("site-config-container");
+    if(!host) return;
+    host.innerHTML = "";
+
+    window.selectedSites.forEach(siteName => {
+        const cfg = normSiteCfg(siteName);
+
+        const card = document.createElement("div");
+        card.className = "site-config-card";
+        card.dataset.site = siteName;
+
+        const header = document.createElement("div");
+        header.className = "site-config-header";
+        const title = document.createElement("div");
+        title.className = "site-config-title";
+        title.textContent = siteName;
+        header.appendChild(title);
+        card.appendChild(header);
+
+        // 試玩模式：邏輯保持（只選廳主，可複選；仍可填版本），但 UI／版面比照其他站別膠囊
+        if (siteName === "試玩模式") {
+            const rowPair = document.createElement("div");
+            rowPair.className = "site-config-row";
+            const fieldPair = document.createElement("div");
+            fieldPair.className = "field";
+            rowPair.appendChild(fieldPair);
+            card.appendChild(rowPair);
+
+            const addLine = document.createElement("div");
+            addLine.className = "pair-add-line";
+
+            // --- 單選廳主 input（autocomplete）---
+            const hallWrap = document.createElement("div");
+            hallWrap.className = "autocomplete-wrapper pair-hall-wrap";
+            const hallInput = document.createElement("input");
+            hallInput.type = "text";
+            hallInput.autocomplete = "new-password";
+            hallInput.placeholder = "選擇廳主";
+            hallInput.readOnly = true;
+            hallInput.setAttribute("inputmode","none");
+            hallInput.classList.add("menu-only");
+            const hallSugg = document.createElement("div");
+            hallSugg.className = "suggestions";
+            hallWrap.appendChild(hallInput);
+            hallWrap.appendChild(hallSugg);
+
+            // --- 佔位：對齊其他站別的「帳號欄」寬度（試玩模式不需要帳號）---
+            const dummyWrap = document.createElement("div");
+            dummyWrap.className = "autocomplete-wrapper pair-account-wrap trial-empty";
+            const dummyInput = document.createElement("input");
+            dummyInput.type = "text";
+            dummyInput.disabled = true;
+            dummyInput.tabIndex = -1;
+            dummyWrap.appendChild(dummyInput);
+
+            const addBtn = document.createElement("button");
+            addBtn.type = "button";
+            addBtn.className = "pair-add-btn";
+            addBtn.textContent = "加入";
+
+            addLine.appendChild(hallWrap);
+            addLine.appendChild(dummyWrap);
+            addLine.appendChild(addBtn);
+
+            const chipBox = document.createElement("div");
+            chipBox.className = "selected-chips";
+            chipBox.style.visibility = "hidden";
+            chipBox.style.marginTop = "2px";
+
+            fieldPair.appendChild(addLine);
+            fieldPair.appendChild(chipBox);
+
+            const renderHalls = () => {
+                chipBox.innerHTML = "";
+                const halls = cfg.halls || [];
+                // ✅ 預留高度避免加入第一顆 chip 時推擠卡片
+                chipBox.style.visibility = halls.length ? "visible" : "hidden";
+                halls.forEach((h, idx) => {
+                    const chip = document.createElement("div");
+                    chip.className = "game-chip";
+                    chip.textContent = h;
+                    const btn = document.createElement("button");
+                    btn.type = "button";
+                    btn.textContent = "×";
+                    btn.addEventListener("click", () => {
+                        const arr = (cfg.halls || []).slice();
+                        arr.splice(idx, 1);
+                        cfg.halls = arr;
+                        renderHalls();
+                        updateFullPreview();
+                    });
+                    chip.appendChild(btn);
+                    chipBox.appendChild(chip);
+                });
+            };
+
+            const renderHallSuggest = (filter="") => {
+                const kw = filter.trim().toLowerCase();
+                hallSugg.innerHTML = "";
+                const matches = (HALL_OPTIONS||[]).filter(v => v.toLowerCase().includes(kw));
+                matches.forEach(v => {
+                    const div = document.createElement("div");
+                    div.className = "suggestion-item";
+                    div.textContent = v;
+                    div.addEventListener("mousedown", () => {
+                        hallInput.value = v;
+                        hallSugg.style.display = "none";
+                    });
+                    hallSugg.appendChild(div);
+                });
+                hallSugg.style.display = matches.length ? "block" : "none";
+            };
+
+            const addHall = () => {
+                const hall = hallInput.value.trim();
+                if(!hall){
+                    alert('請先選擇廳主');
+                    return;
+                }
+                const arr = (cfg.halls || []).slice();
+                if(!arr.includes(hall)) arr.push(hall);
+                cfg.halls = arr;
+                hallInput.value = "";
+                renderHalls();
+                updateFullPreview();
+            };
+
+            addBtn.addEventListener("click", addHall);
+            hallInput.addEventListener("focus", () => renderHallSuggest(""));
+            // hallInput 為 menu-only，不需要 input 過濾（保留以防未來需求）
+            hallInput.addEventListener("input", () => renderHallSuggest(hallInput.value));
+            hallInput.addEventListener("keydown", (e) => {
+                if(e.key === "Enter"){
+                    addHall();
+                    e.preventDefault();
+                    return;
+                }
+                if (e.key !== "Tab" && e.key !== "Shift") e.preventDefault();
+            });
+            document.addEventListener("click", (e) => {
+                if (!hallWrap.contains(e.target)) hallSugg.style.display = "none";
+            });
+
+            renderHalls();
+
+            // 試玩模式不使用『投注歷程版本』：強制關閉並清空（避免舊值影響輸出）
+            cfg.versions.betEnabled = false;
+            cfg.versions.bet = "";
+
+            // --- 版本（每站別各自設定；試玩模式也需要；預留高度避免推擠）---
+            const vBlock = document.createElement("div");
+            vBlock.className = "site-version-block";
+
+            const makeVersionLine = (text, enabledKey, valueKey, memKey, placeholder) => {
+                const line = document.createElement("div");
+                line.className = "site-version-line";
+
+                const lab = document.createElement("label");
+                const chk = document.createElement("input");
+                chk.type = "checkbox";
+                chk.checked = !!cfg.versions[enabledKey];
+                chk.dataset.site = siteName;
+                chk.dataset.vkey = enabledKey;
+                lab.appendChild(chk);
+                lab.appendChild(document.createTextNode(" " + text));
+
+                const wrap = document.createElement("div");
+                wrap.className = "autocomplete-wrapper";
+                if(!chk.checked) wrap.classList.add("v-hidden");
+
+                const inp = document.createElement("input");
+                inp.type = "text";
+                inp.autocomplete = "new-password";
+                inp.placeholder = placeholder;
+                inp.value = (cfg.versions[valueKey] || "");
+                inp.dataset.site = siteName;
+                inp.dataset.vkey = valueKey;
+
+                const sugg = document.createElement("div");
+                sugg.className = "suggestions";
+
+                wrap.appendChild(inp);
+                wrap.appendChild(sugg);
+
+                inp.disabled = !chk.checked;
+
+                chk.addEventListener("change", () => {
+                    cfg.versions[enabledKey] = chk.checked;
+                    wrap.classList.toggle("v-hidden", !chk.checked);
+                    inp.disabled = !chk.checked;
+                    updateFullPreview();
+                });
+                inp.addEventListener("input", () => {
+                    cfg.versions[valueKey] = inp.value;
+                    updateFullPreview();
+                });
+
+                setupMemoryFieldElement(inp, memKey);
+
+                line.appendChild(lab);
+                line.appendChild(wrap);
+                return line;
+            };
+
+            vBlock.appendChild(
+                makeVersionLine(
+                    "遊戲版本",
+                    "gameEnabled",
+                    "game",
+                    `version_game_${siteName}`,
+                    "輸入遊戲版本號碼"
+                )
+            );
+            fieldPair.appendChild(vBlock);
+        } else {
+            // 其他站別：廳主 ↔ 帳號（1 對 1 綁定），以「配對」方式加入
+            const rowPair = document.createElement("div");
+            rowPair.className = "site-config-row";
+            const fieldPair = document.createElement("div");
+            fieldPair.className = "field";
+            rowPair.appendChild(fieldPair);
+            card.appendChild(rowPair);
+
+            const addLine = document.createElement("div");
+            addLine.className = "pair-add-line";
+
+            // --- 單選廳主 input（autocomplete） ---
+            const hallWrap = document.createElement("div");
+            hallWrap.className = "autocomplete-wrapper pair-hall-wrap";
+            const hallInput = document.createElement("input");
+            hallInput.type = "text";
+            hallInput.autocomplete = "new-password";
+            hallInput.placeholder = "選擇廳主";
+            hallInput.readOnly = true;
+            hallInput.setAttribute("inputmode","none");
+            hallInput.classList.add("menu-only");
+            const hallSugg = document.createElement("div");
+            hallSugg.className = "suggestions";
+            hallWrap.appendChild(hallInput);
+            hallWrap.appendChild(hallSugg);
+
+            // --- 單選/輸入帳號 input（autocomplete + memory） ---
+            const accWrap = document.createElement("div");
+            accWrap.className = "autocomplete-wrapper pair-account-wrap";
+            const accInput = document.createElement("input");
+            accInput.type = "text";
+            accInput.autocomplete = "new-password";
+            accInput.placeholder = "輸入/搜尋帳號";
+            const accSugg = document.createElement("div");
+            accSugg.className = "suggestions";
+            accWrap.appendChild(accInput);
+            accWrap.appendChild(accSugg);
+
+            const addBtn = document.createElement("button");
+            addBtn.type = "button";
+            addBtn.className = "pair-add-btn";
+            addBtn.textContent = "加入";
+
+            addLine.appendChild(hallWrap);
+            addLine.appendChild(accWrap);
+            addLine.appendChild(addBtn);
+
+            const chipBox = document.createElement("div");
+            chipBox.className = "selected-chips";
+            chipBox.style.visibility = "hidden";
+            chipBox.style.marginTop = "2px";
+
+            fieldPair.appendChild(addLine);
+            fieldPair.appendChild(chipBox);
+
+            // --- 版本（每站別各自設定；試玩模式不顯示） ---
+            const vBlock = document.createElement("div");
+            vBlock.className = "site-version-block";
+
+            const makeVersionLine = (text, enabledKey, valueKey, memKey, placeholder) => {
+                const line = document.createElement("div");
+                line.className = "site-version-line";
+
+                const lab = document.createElement("label");
+                const chk = document.createElement("input");
+                chk.type = "checkbox";
+                chk.checked = !!cfg.versions[enabledKey];
+                // 標記：供輸出時同步 DOM 內容
+                chk.dataset.site = siteName;
+                chk.dataset.vkey = enabledKey;
+                lab.appendChild(chk);
+                lab.appendChild(document.createTextNode(" " + text));
+
+                const wrap = document.createElement("div");
+                wrap.className = "autocomplete-wrapper";
+                // ✅ 永遠保留佔位：用 visibility 來隱藏，避免勾選後整個膠囊被推擠
+                if(!chk.checked) wrap.classList.add("v-hidden");
+
+                const inp = document.createElement("input");
+                inp.type = "text";
+                inp.autocomplete = "new-password";
+                inp.placeholder = placeholder;
+                inp.value = (cfg.versions[valueKey] || "");
+                // 標記：供輸出時同步 DOM 內容
+                inp.dataset.site = siteName;
+                inp.dataset.vkey = valueKey;
+
+                const sugg = document.createElement("div");
+                sugg.className = "suggestions";
+
+                wrap.appendChild(inp);
+                wrap.appendChild(sugg);
+
+                // 初始狀態：未勾選時避免 tab 進入隱藏欄位
+                inp.disabled = !chk.checked;
+
+                chk.addEventListener("change", () => {
+                    cfg.versions[enabledKey] = chk.checked;
+                    wrap.classList.toggle("v-hidden", !chk.checked);
+                    inp.disabled = !chk.checked;
+                    updateFullPreview();
+                });
+                inp.addEventListener("input", () => {
+                    cfg.versions[valueKey] = inp.value;
+                    updateFullPreview();
+                });
+
+                // autocomplete + localStorage memory
+                setupMemoryFieldElement(inp, memKey);
+
+                line.appendChild(lab);
+                line.appendChild(wrap);
+                return line;
+            };
+
+            vBlock.appendChild(
+                makeVersionLine(
+                    "遊戲版本",
+                    "gameEnabled",
+                    "game",
+                    `version_game_${siteName}`,
+                    "輸入遊戲版本號碼"
+                )
+            );
+            vBlock.appendChild(
+                makeVersionLine(
+                    "投注歷程版本",
+                    "betEnabled",
+                    "bet",
+                    `version_bet_${siteName}`,
+                    "輸入投注歷程版本號碼"
+                )
+            );
+
+            fieldPair.appendChild(vBlock);
+
+            // memory list for accounts
+            const accMemKey = `account_${siteName}`;
+            let accMem = [];
+            try { accMem = JSON.parse(localStorage.getItem(accMemKey)) || []; } catch { accMem = []; }
+            const saveAccMem = (v) => {
+                if(!v) return;
+                if(!accMem.includes(v)) {
+                    accMem.push(v);
+                    localStorage.setItem(accMemKey, JSON.stringify(accMem));
+                }
+            };
+
+            const renderHallSuggest = (filter="") => {
+                const kw = filter.trim().toLowerCase();
+                hallSugg.innerHTML = "";
+                const matches = (HALL_OPTIONS||[]).filter(v => v.toLowerCase().includes(kw));
+                matches.forEach(v => {
+                    const div = document.createElement("div");
+                    div.className = "suggestion-item";
+                    div.textContent = v;
+                    div.addEventListener("mousedown", () => {
+                        hallInput.value = v;
+                        hallSugg.style.display = "none";
+                    });
+                    hallSugg.appendChild(div);
+                });
+                hallSugg.style.display = matches.length ? "block" : "none";
+            };
+
+            const renderAccSuggest = (filter="") => {
+                const kw = filter.trim().toLowerCase();
+                accSugg.innerHTML = "";
+                const uniq = Array.from(new Set(accMem));
+                const matches = uniq.filter(v => v.toLowerCase().includes(kw));
+                matches.forEach(v => {
+                    const div = document.createElement("div");
+                    div.className = "suggestion-item";
+                    div.textContent = v;
+                    div.addEventListener("mousedown", () => {
+                        accInput.value = v;
+                        accSugg.style.display = "none";
+                    });
+                    accSugg.appendChild(div);
+                });
+                accSugg.style.display = matches.length ? "block" : "none";
+            };
+
+            const renderPairs = () => {
+                chipBox.innerHTML = "";
+                const pairs = cfg.pairs || [];
+                // ✅ 預留高度避免加入第一顆 chip 時推擠卡片
+                chipBox.style.visibility = pairs.length ? "visible" : "hidden";
+                pairs.forEach((p, idx) => {
+                    const chip = document.createElement("div");
+                    chip.className = "game-chip";
+                    chip.textContent = `${p.hall}／${p.account}`;
+                    const btn = document.createElement("button");
+                    btn.type = "button";
+                    btn.textContent = "×";
+                    btn.addEventListener("click", () => {
+                        const arr = (cfg.pairs || []).slice();
+                        arr.splice(idx, 1);
+                        cfg.pairs = arr;
+                        renderPairs();
+                        updateFullPreview();
+                    });
+                    chip.appendChild(btn);
+                    chipBox.appendChild(chip);
+                });
+            };
+
+            const addPair = () => {
+                const hall = hallInput.value.trim();
+                const acc  = accInput.value.trim();
+                if(!hall || !acc){
+                    alert('請先選擇廳主並輸入帳號');
+                    return;
+                }
+                const arr = (cfg.pairs || []).slice();
+                const i = arr.findIndex(x => x.hall === hall);
+                if(i >= 0){
+                    // 一個廳主只能綁一個帳號：直接更新為新帳號
+                    arr[i] = { hall, account: acc };
+                } else {
+                    arr.push({ hall, account: acc });
+                }
+                cfg.pairs = arr;
+                saveAccMem(acc);
+                hallInput.value = "";
+                accInput.value  = "";
+                renderPairs();
+                updateFullPreview();
+            };
+
+            addBtn.addEventListener("click", addPair);
+
+            hallInput.addEventListener("focus", () => renderHallSuggest(""));
+            // hallInput 為 menu-only，不需要 input 過濾（保留以防未來需求）
+            hallInput.addEventListener("input", () => renderHallSuggest(hallInput.value));
+            hallInput.addEventListener("keydown", (e) => {
+                if (e.key !== "Tab" && e.key !== "Shift") e.preventDefault();
+            });
+
+            accInput.addEventListener("focus", () => renderAccSuggest(""));
+            accInput.addEventListener("input", () => renderAccSuggest(accInput.value));
+
+            accInput.addEventListener("keydown", (e) => {
+                if(e.key === "Enter"){
+                    addPair();
+                    e.preventDefault();
+                }
+            });
+
+            document.addEventListener("click", (e) => {
+                if (!hallWrap.contains(e.target)) hallSugg.style.display = "none";
+                if (!accWrap.contains(e.target))  accSugg.style.display  = "none";
+            });
+
+            renderPairs();
+        }
+
+        host.appendChild(card);
+    });
+}
+
 /* --- 初始化 --- */
 window.addEventListener("DOMContentLoaded",()=>{
     setToday();
-// 🔒 試玩模式 → 帳號欄位凍結 + 清空
-document.getElementById("site").addEventListener("change", () => {
-    const site = document.getElementById("site").value;
-    const accountInput = document.getElementById("account");
 
-    if (site === "試玩模式") {
-        accountInput.value = "";
-        accountInput.disabled = true;
-    } else {
-        accountInput.disabled = false;
-    }
+    // 自動同步 iOS OS 版本到 Safari 欄位
+    document.getElementById("ios-os").addEventListener("input", () => {
+        const os = document.getElementById("ios-os").value.trim();
+        document.getElementById("ios-safari-version").value = os;
+    });
 
-    updateFullPreview();
-});
-
-
-// 自動同步 iOS OS 版本到 Safari 欄位
-document.getElementById("ios-os").addEventListener("input", () => {
-    const os = document.getElementById("ios-os").value.trim();
-    document.getElementById("ios-safari-version").value = os;
-});
-
-
+    // 記憶欄位
     setupMemoryField("tester","tester");
-    setupMemoryField("version-game","version_game");
-    setupMemoryField("version-bet","version_bet");
-    setupMemoryField("account","account");    setupMemoryField("android-model","android_model");
+    setupMemoryField("android-model","android_model");
     setupMemoryField("ios-model","ios_model");
-    // ✅ 版本（可複選）— 顯示控制 + 即時預覽
-    function toggleVersionInputs(){
-        const showGame = document.getElementById("version-game-check").checked;
-        const showBet  = document.getElementById("version-bet-check").checked;
 
-        document.getElementById("version-game-wrapper").style.display = showGame ? "block" : "none";
-        document.getElementById("version-bet-wrapper").style.display  = showBet  ? "block" : "none";
-    }
-
-    ["version-game-check","version-bet-check"].forEach(id => {
-        document.getElementById(id).addEventListener("change", () => {
-            toggleVersionInputs();
-            updateFullPreview();
-        });
-    });
-
-    ["version-game","version-bet"].forEach(id => {
-        document.getElementById(id).addEventListener("input", updateFullPreview);
-    });
-
-    // 初始狀態
-    toggleVersionInputs();
-
-// 強化帳號欄位的即時預覽更新
-["input","keyup","change","blur"].forEach(ev => {
-    document.getElementById("account").addEventListener(ev, updateFullPreview);
-});
-
-    updateFullPreview();
+    // 站別初始渲染
+    renderSelectedSites();
+    renderSiteConfigBlocks();
 
     // 控制 iOS 子欄位顯示
+    const syncIosBlock = () => {
+        const ios = document.getElementById("ios-check").checked;
+        document.getElementById("ios-browser-wrapper").style.display = ios ? "flex" : "none";
+    };
+    syncIosBlock();
     document.querySelectorAll(".device-check").forEach(chk=>{
         chk.addEventListener("change",()=>{
-            const ios=document.getElementById("ios-check").checked;
-            document.getElementById("ios-browser-wrapper").style.display = ios ? "flex" : "none";
+            syncIosBlock();
             updateFullPreview();
         });
     });
@@ -995,27 +2116,33 @@ document.getElementById("ios-os").addEventListener("input", () => {
 
     // 基本欄位
     [
-        "incident_date","site","hall","order_id",
+        "incident_date","order_id",
+        "problem-desc",
         "operation_editor","actual_editor","expected_editor","remark_editor"
     ].forEach(id=>{
-        document.getElementById(id).addEventListener("input",updateFullPreview);
+        const el = document.getElementById(id);
+        if(el) el.addEventListener("input", ()=>{
+            if(id === "problem-desc") updateTitle();
+            updateFullPreview();
+        });
     });
 
     // 裝置欄位
-    [        "pc-browser",
-        "android-model",
-        "android-os","android-browser",
-        "ios-os",
-        "ios-model",
+    [
+        "pc-browser",
+        "android-model","android-os","android-browser",
+        "ios-os","ios-model",
         "ios-safari-version","ios-chrome-version",
         "ios-other-name","ios-other-version"
     ].forEach(id=>{
         const el=document.getElementById(id);
         if(el) el.addEventListener("input",updateFullPreview);
     });
+
+    updateTitle();
+    updateFullPreview();
 });
 </script>
 
 </body>
 </html>
-
