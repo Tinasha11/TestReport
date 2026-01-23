@@ -1,10 +1,10 @@
 <!DOCTYPE html>
+
 <html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8" />
-    <title>任務回報模板產生器</title>
-
-    <style>
+<meta charset="utf-8"/>
+<title>任務回報模板產生器</title>
+<style>
         /* ====== 基本頁面樣式 ====== */
         body {
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -245,7 +245,69 @@
             width: 644px !important;
         }
 
-    
+
+                /* ====== BUG 等級（任務標題區塊） ====== */
+        .bug-level-layout{
+            display: flex;
+            flex-direction: column;   /* 表格放在下方，並吃滿整行寬度 */
+            align-items: stretch;
+            gap: 6px;                 /* 行距更緊密 */
+            margin-top: 4px;
+        }
+        .bug-level-left{
+            flex: 0 0 auto;
+            min-width: 0;
+        }
+        .bug-level-left .form-row{
+            margin-bottom: 0;
+        }
+        #bug-level{
+            width: 160px;
+        }
+        .bug-level-table-wrap{
+            width: 100%;
+            max-width: 100%;
+            overflow: hidden; /* 固定表格大小 + 禁止任何卷軸 */         /* 若螢幕太窄，改為水平捲動避免怪換行 */
+        }
+        .bug-level-table{
+            width: 100%;
+            table-layout: fixed;      /* 固定總寬：欄位在固定寬內分配 */
+            min-width: 0;             /* 不允許撐大表格 */
+            border-collapse: collapse;
+            font-size: 0.86rem;
+            background: #fff;
+            border: 1px solid #e1e1e1;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .bug-level-table th,
+        .bug-level-table td{
+            border: 1px solid #e1e1e1;
+            padding: 6px 8px;
+            vertical-align: top;
+            line-height: 1.25;
+            font-weight: 400;
+            text-align: left;
+
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .bug-level-table th{
+            background: linear-gradient(180deg, #e8f0fa 0%, #dbe6f4 100%);
+            color: #2f3b4a;
+            border-bottom: 1px solid #cdd7e3;
+            font-weight: 700;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .bug-level-table td.bug-level{
+            width: 52px;
+            text-align: center;
+            font-weight: 700;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
         /* ====== 已選遊戲（橫向 chip 樣式） ====== */
         #selected-games {
             display: flex;
@@ -328,15 +390,15 @@
             background: #ffffff;
             border: 1px solid #e6e6e6;
             border-radius: 10px;
-            padding: 10px 12px;
-            margin: 8px 0 10px;
+            padding: 8px 12px;
+            margin: 6px 0 8px;
         }
 
         .site-config-header{
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
         /* 站別標題：用「小標籤/章節」風格，避免和 chip（藍色膠囊）長得一樣 */
@@ -355,8 +417,8 @@
         .site-config-row{
             display: flex;
             align-items: flex-start;
-            gap: 8px;
-            margin-top: 2px;
+            gap: 6px;
+            margin-top: 0px;
         }
         .site-config-row label{
             min-width: 120px;
@@ -373,15 +435,21 @@
             display: flex;
             flex-wrap: wrap;
             gap: 4px;
-            min-height: 26px; /* 預留一行 chip 高度：避免加入後微推擠 */
+            /* 預留兩行 chip 高度：避免加入後推擠膠囊；超出則在區塊內捲動 */
+            min-height:  28px;
+            max-height: 52px;
+            overflow-y: auto;
             align-content: flex-start;
         }
+
+        /* 讓卡片內各區塊更緊密：覆寫 JS 內聯 marginTop=2px（避免 chip 區塊與上一行留白過多） */
+        .site-config-card .selected-chips{ margin-top: 1px !important; }
 
         /* 每站別：廳主/帳號一對一綁定 UI */
         .pair-add-line{
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             flex-wrap: wrap;
         }
         .pair-add-line .pair-hall-wrap{ width: 260px; flex: 0 0 auto; }
@@ -400,13 +468,23 @@
         }
         .pair-add-line button:hover{ background:#eef3fb; }
 
+        /* 讓所有「加入」按鈕一致（含試玩模式的加入） */
+        .pair-add-btn{
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid #cfd8e3;
+            background: #f7f9fc;
+            cursor: pointer;
+        }
+        .pair-add-btn:hover{ background:#eef3fb; }
+
         /* 每站別：版本（遊戲版本 / 投注歷程版本） */
         /* 目標：勾選後出現輸入框時不推擠膠囊高度 → 先預留輸入框高度 */
         .site-version-block{
-            margin-top: 4px; /* 更緊密 */
+            margin-top: 2px; /* 更緊密 */
             display: flex;
             flex-direction: column;
-            gap: 4px; /* 更緊密 */
+            gap: 2px; /* 更緊密 */
         }
         .site-version-line{
             /* 讓兩個輸入框起點完全對齊：固定第一欄寬度 */
@@ -436,7 +514,40 @@
             pointer-events: none;
         }
 
-        /* 站別輸入框短一點：右側留給已選 chip */
+        /* 試玩模式（掛在站別上）：UI 對齊版本輸入框與加入按鈕 */
+        .trial-line{
+            display: grid;
+            grid-template-columns: 260px 240px max-content; /* 對齊：廳主欄 / 帳號欄 / 加入按鈕（按鈕不拉伸） */
+            align-items: center;
+            column-gap: 6px; /* 與廳主/帳號同樣緊密 */
+        }
+        .trial-line label{
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0;
+            white-space: nowrap;
+        }
+        .trial-line .autocomplete-wrapper{
+            width: 240px; /* 對齊「帳號」欄位寬度 */
+            flex: 0 0 auto;
+            min-width: 0;
+            display: block;
+        }
+        /* 為避免推擠：使用 visibility 保留高度 */
+        .trial-line .autocomplete-wrapper.v-hidden,
+        .trial-line .pair-add-btn.v-hidden{
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .trial-line .pair-add-btn{
+            justify-self: start;
+            width: fit-content;
+        }
+                /* 站別輸入框短一點：右側留給已選 chip */
         .site-select-wrap{ width: 220px; }
         .site-select-wrap input{ width: 100%; }
 
@@ -523,194 +634,226 @@
             pointer-events: auto;
         }
 
-</style>
 
+/* BUG 等級參考表：讓儲存格內容盡量單行顯示（不足則水平捲動） */
+.bug-ref-wrap{overflow-x:auto;}
+.bug-ref-table{
+  min-width: 1600px; /* 提高最小寬度，降低換行機率 */
+  table-layout: auto;
+}
+.bug-ref-table th,
+.bug-ref-table td{
+  white-space: nowrap; /* 儲存格內容單行 */
+  font-size: 13px;     /* 稍微縮小字體以避免擁擠 */
+  padding: 10px 12px;  /* 調整內距 */
+}
+
+/* 定義欄位：全部置中（支援rowspan） */
+.bug-level-table th.bug-def,
+.bug-level-table td.bug-def{
+    text-align: center;
+}
+
+/* BUG 等級表：全部內容置中（等級 / 定義 / 範例） */
+.bug-level-table th,
+.bug-level-table td{
+  text-align: center;
+}
+</style>
 <style>
 select option[disabled]{display:none;}
 </style>
 </head>
 <body autocomplete="off">
 <div class="container">
-    <h1>任務回報模板產生器</h1>
-
-    <!-- 任務標題 -->
-    <div class="title-section">
-        <h2>任務標題</h2>
-
-        <!-- 遊戲 -->
-        <div class="form-row">
-            <label>遊戲：</label>
-            <div class="autocomplete-wrapper">
-                <input type="text" id="game-select" autocomplete="new-password" name="nohistory-game"
-                     placeholder="搜尋遊戲（GameCode或名稱），可複選">
-                <div class="suggestions" id="game-suggestions"></div>
-                <div id="selected-games" style="margin-top:6px;font-size:0.9rem;color:#333;"></div>
-            </div>
-        </div>
-
-        <!-- 問題描述 -->
-        <div class="form-row">
-            <label>問題描述：</label>
-            <input type="text" id="problem-desc" autocomplete="new-password" name="nohistory-desc"
-                placeholder="簡述本次問題">
-        </div>
-    </div>
-
-    <!-- 基本資訊 -->
-    <div class="section">
-        <h2>基本資訊</h2>
-
-        <div class="form-row">
-            <label>發生時間：</label>
-            <input type="date" id="incident_date" autocomplete="new-password" name="nohistory-date">
-        </div>
-
-        <div class="form-row">
-            <label>測試者：</label>
-            <div class="autocomplete-wrapper">
-                <input type="text" id="tester" class="memory-input"
-                    data-memory-key="tester" autocomplete="new-password" name="nohistory-tester">
-                <div class="suggestions"></div>
-            </div>
-        </div>
-        <div class="form-row">
-            <label>站別：</label>
-            <div class="site-inline-select">
-                <div class="autocomplete-wrapper site-select-wrap">
-                    <input type="text" id="site-select" class="menu-only" readonly inputmode="none" autocomplete="new-password" name="nohistory-site"
-                        placeholder="搜尋站別，可複選">
-                    <div class="suggestions" id="site-suggestions"></div>
-                </div>
-                <div id="selected-sites"></div>
-            </div>
-        </div>
-
-        <div class="form-row">
-            <label>測試廳主／帳號：</label>
-            <div id="site-config-container" class="site-config-container"></div>
-        </div>
-
-        <!-- 裝置 -->
-        <div class="form-row">
-            <label>裝置：</label>
-
-            <div class="device-group">
-                <!-- PC -->
-                <div class="device-row" id="pc-row">
-                    <label><input type="checkbox" class="device-check"
-                        value="PC" id="device-pc"> PC</label>
-<input type="text" id="pc-browser" autocomplete="new-password" name="nohistory-pcb"
-                        class="browser-input" placeholder="瀏覽器版本">
-                </div>
-
-                <!-- Android -->
-                <div class="device-row android with-model"><label><input type="checkbox" class="device-check"
-                        value="Android" id="device-android"> Android</label>
-                    <div class="autocomplete-wrapper">
-                        <input type="text" id="android-model" data-memory-key="android_model" autocomplete="new-password" name="nohistory-am"
-                        class="model-input memory-input" placeholder="裝置型號（非必要可略過）">
-                        <div class="suggestions"></div>
-                    </div>
-                    <input type="text" id="android-os" autocomplete="new-password" name="nohistory-aos"
-                        class="os-input" placeholder="系統版本">
-                    <input type="text" id="android-browser" autocomplete="new-password" name="nohistory-ab"
-                        class="browser-input" placeholder="瀏覽器版本">
-                </div>
-
-                <!-- iOS -->
-                <div class="device-row with-model" id="ios-row">
-                    <label><input type="checkbox" class="device-check"
-                        value="iOS" id="ios-check"> iOS</label>
-                    
-                    <div class="autocomplete-wrapper">
-                        <input type="text" id="ios-model" data-memory-key="ios_model" autocomplete="new-password" name="nohistory-im"
-                        class="model-input memory-input" placeholder="裝置型號（非必要可略過）">
-                        <div class="suggestions"></div>
-                    </div>
-                    <input type="text" id="ios-os" autocomplete="new-password" name="nohistory-ios"
-                        class="os-input" placeholder="系統版本">
-                    
-                </div>
-            </div>
-        </div>
-
-        <!-- iOS 子欄位（已套用你要求的左移 + 寬度調整） -->
-        <div class="form-row" id="ios-browser-wrapper" style="display:none;">
-            <div class="ios-browser-group">
-
-                <div class="device-row">
-                    <label><input type="checkbox" class="ios-browser" id="ios-safari">
-                        Safari</label>
-                    <input type="text" id="ios-safari-version" autocomplete="new-password" name="nohistory-isv"
-                        class="browser-version-input" placeholder="Safari版本為iOS版本" readonly style="background:#ddd;color:#555;">
-                </div>
-
-                <div class="device-row">
-                    <label><input type="checkbox" class="ios-browser" id="ios-chrome">
-                        Chrome</label>
-                    <input type="text" id="ios-chrome-version" autocomplete="new-password" name="nohistory-icv"
-                        class="browser-version-input" placeholder="瀏覽器版本">
-                </div>
-
-                <div class="ios-extra-row">
-                    <label>其他：</label>
-                    <input type="text" id="ios-other-name" autocomplete="new-password" name="nohistory-ion"
-                        class="browser-name-input" placeholder="瀏覽器（例：Edge）">
-                    <input type="text" id="ios-other-version" autocomplete="new-password" name="nohistory-iov"
-                        class="browser-version-input" placeholder="瀏覽器版本">
-                </div>
-
-            </div>
-        </div>
-
-        <div class="form-row">
-            <label>注單編號：</label>
-            <input type="text" id="order_id" autocomplete="new-password" name="nohistory-order" placeholder="未有注單可跳過">
-        </div>
-    </div>
-    <!-- 描述內容 -->
-    <div class="section">
-        <h2>描述內容</h2>
-
-        <div class="form-row vertical">
-            <label>操作：</label>
-            <div id="operation_editor" class="rich-editor large"
-                contenteditable="true"></div>
-        </div>
-
-        <div class="form-row vertical">
-            <label>實際結果：</label>
-            <div id="actual_editor" class="rich-editor large"
-                contenteditable="true"></div>
-        </div>
-
-        <div class="form-row vertical">
-            <label>預期結果：</label>
-            <div id="expected_editor" class="rich-editor large"
-                contenteditable="true"></div>
-        </div>
-
-        <div class="form-row vertical">
-            <label>備註：</label>
-            <div id="remark_editor" class="rich-editor medium"
-                contenteditable="true"></div>
-        </div>
-    </div>
-
-    <!-- 按鈕 -->
-    <div class="button-row">
-        <button id="copy-title-btn">複製標題</button>
-        <button id="copy-btn">一鍵複製</button>
-    </div>
-
-    <!-- 預覽 -->
-    <div class="section">
-        <h2>文字預覽</h2>
-        <input type="text" id="title-preview" readonly>
-        <textarea id="full-preview" rows="16" readonly></textarea>
-    </div>
+<h1>任務回報模板產生器</h1>
+<!-- 任務標題 -->
+<div class="title-section">
+<h2>任務標題</h2>
+<!-- 遊戲 -->
+<div class="form-row">
+<label>遊戲：</label>
+<div class="autocomplete-wrapper">
+<input autocomplete="new-password" id="game-select" name="nohistory-game" placeholder="搜尋遊戲（GameCode或名稱），可複選" type="text"/>
+<div class="suggestions" id="game-suggestions"></div>
+<div id="selected-games" style="margin-top:6px;font-size:0.9rem;color:#333;"></div>
 </div>
-
+</div>
+<!-- 問題描述 -->
+<div class="form-row">
+<label>問題描述：</label>
+<input autocomplete="new-password" id="problem-desc" name="nohistory-desc" placeholder="簡述本次問題" type="text"/>
+</div>
+<!-- BUG等級 -->
+<div class="bug-level-layout">
+<div class="bug-level-left">
+<div class="form-row">
+<label>BUG等級：</label>
+<select autocomplete="off" id="bug-level">
+<option disabled="" selected="" value="">請選擇</option>
+<option value="高">高</option>
+<option value="中">中</option>
+<option value="低">低</option>
+</select>
+</div>
+</div>
+<div class="bug-level-table-wrap">
+<table aria-label="BUG等級參考" class="bug-level-table">
+<colgroup>
+<col class="col-level" style="width:52px;"/>
+<col class="col-def" style="width:65%;"/>
+<col class="col-ex" style="width:35%;"/>
+</colgroup>
+<thead>
+<tr>
+<th>等級</th>
+<th class="bug-def">定義</th>
+<th>範例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="bug-level" rowspan="2">高</td>
+<td class="bug-def">核心功能無法使用、服務中斷、資料嚴重錯誤</td>
+<td>無法登入、金流失敗</td>
+</tr>
+<tr>
+<td class="bug-def">非核心流程中斷，但會造成大範圍使用影響</td>
+<td>獎勵錯誤、流程卡死</td>
+</tr>
+<tr>
+<td class="bug-level" rowspan="2">中</td>
+<td class="bug-def">功能異常但可替代、可繞過</td>
+<td>顯示錯誤、流程需重來</td>
+</tr>
+<tr>
+<td class="bug-def">圖片顯示不完整</td>
+<td>切邊/未留安全區</td>
+</tr>
+<tr>
+<td class="bug-level">低</td>
+<td class="bug-def">體驗或顯示問題，不影響主要功能</td>
+<td>UI 標示或文案錯字</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- 基本資訊 -->
+<div class="section">
+<h2>基本資訊</h2>
+<div class="form-row">
+<label>發生時間：</label>
+<input autocomplete="new-password" id="incident_date" name="nohistory-date" type="date"/>
+</div>
+<div class="form-row">
+<label>測試者：</label>
+<div class="autocomplete-wrapper">
+<input autocomplete="new-password" class="memory-input" data-memory-key="tester" id="tester" name="nohistory-tester" type="text"/>
+<div class="suggestions"></div>
+</div>
+</div>
+<div class="form-row">
+<label>站別：</label>
+<div class="site-inline-select">
+<div class="autocomplete-wrapper site-select-wrap">
+<input autocomplete="new-password" class="menu-only" id="site-select" inputmode="none" name="nohistory-site" placeholder="搜尋站別，可複選" readonly="" type="text"/>
+<div class="suggestions" id="site-suggestions"></div>
+</div>
+<div id="selected-sites"></div>
+</div>
+</div>
+<div class="form-row">
+<label>測試廳主／帳號：</label>
+<div class="site-config-container" id="site-config-container"></div>
+</div>
+<!-- 裝置 -->
+<div class="form-row">
+<label>裝置：</label>
+<div class="device-group">
+<!-- PC -->
+<div class="device-row" id="pc-row">
+<label><input class="device-check" id="device-pc" type="checkbox" value="PC"/> PC</label>
+<input autocomplete="new-password" class="browser-input" id="pc-browser" name="nohistory-pcb" placeholder="瀏覽器版本" type="text"/>
+</div>
+<!-- Android -->
+<div class="device-row android with-model"><label><input class="device-check" id="device-android" type="checkbox" value="Android"/> Android</label>
+<div class="autocomplete-wrapper">
+<input autocomplete="new-password" class="model-input memory-input" data-memory-key="android_model" id="android-model" name="nohistory-am" placeholder="裝置型號（非必要可略過）" type="text"/>
+<div class="suggestions"></div>
+</div>
+<input autocomplete="new-password" class="os-input" id="android-os" name="nohistory-aos" placeholder="系統版本" type="text"/>
+<input autocomplete="new-password" class="browser-input" id="android-browser" name="nohistory-ab" placeholder="瀏覽器版本" type="text"/>
+</div>
+<!-- iOS -->
+<div class="device-row with-model" id="ios-row">
+<label><input class="device-check" id="ios-check" type="checkbox" value="iOS"/> iOS</label>
+<div class="autocomplete-wrapper">
+<input autocomplete="new-password" class="model-input memory-input" data-memory-key="ios_model" id="ios-model" name="nohistory-im" placeholder="裝置型號（非必要可略過）" type="text"/>
+<div class="suggestions"></div>
+</div>
+<input autocomplete="new-password" class="os-input" id="ios-os" name="nohistory-ios" placeholder="系統版本" type="text"/>
+</div>
+</div>
+</div>
+<!-- iOS 子欄位（已套用你要求的左移 + 寬度調整） -->
+<div class="form-row" id="ios-browser-wrapper" style="display:none;">
+<div class="ios-browser-group">
+<div class="device-row">
+<label><input class="ios-browser" id="ios-safari" type="checkbox"/>
+                        Safari</label>
+<input autocomplete="new-password" class="browser-version-input" id="ios-safari-version" name="nohistory-isv" placeholder="Safari版本為iOS版本" readonly="" style="background:#ddd;color:#555;" type="text"/>
+</div>
+<div class="device-row">
+<label><input class="ios-browser" id="ios-chrome" type="checkbox"/>
+                        Chrome</label>
+<input autocomplete="new-password" class="browser-version-input" id="ios-chrome-version" name="nohistory-icv" placeholder="瀏覽器版本" type="text"/>
+</div>
+<div class="ios-extra-row">
+<label>其他：</label>
+<input autocomplete="new-password" class="browser-name-input" id="ios-other-name" name="nohistory-ion" placeholder="瀏覽器（例：Edge）" type="text"/>
+<input autocomplete="new-password" class="browser-version-input" id="ios-other-version" name="nohistory-iov" placeholder="瀏覽器版本" type="text"/>
+</div>
+</div>
+</div>
+<div class="form-row">
+<label>注單編號：</label>
+<input autocomplete="new-password" id="order_id" name="nohistory-order" placeholder="未有注單可跳過" type="text"/>
+</div>
+</div>
+<!-- 描述內容 -->
+<div class="section">
+<h2>描述內容</h2>
+<div class="form-row vertical">
+<label>操作：</label>
+<div class="rich-editor large" contenteditable="true" id="operation_editor"></div>
+</div>
+<div class="form-row vertical">
+<label>實際結果：</label>
+<div class="rich-editor large" contenteditable="true" id="actual_editor"></div>
+</div>
+<div class="form-row vertical">
+<label>預期結果：</label>
+<div class="rich-editor large" contenteditable="true" id="expected_editor"></div>
+</div>
+<div class="form-row vertical">
+<label>備註：</label>
+<div class="rich-editor medium" contenteditable="true" id="remark_editor"></div>
+</div>
+</div>
+<!-- 按鈕 -->
+<div class="button-row">
+<button id="copy-title-btn">複製標題</button>
+<button id="copy-btn">一鍵複製</button>
+</div>
+<!-- 預覽 -->
+<div class="section">
+<h2>文字預覽</h2>
+<input id="title-preview" readonly="" type="text"/>
+<textarea id="full-preview" readonly="" rows="16"></textarea>
+</div>
+</div>
 <!-- ===================== JS ======================= -->
 <script>
 /* 設定今日日期 */
@@ -917,6 +1060,9 @@ function toFullWidthSymbols(str){
 /* --- 標題生成 --- */
 function updateTitle(){
     const desc=document.getElementById("problem-desc").value.trim();
+    const bugLv = (document.getElementById("bug-level")?.value || "").trim();
+    const bugEmoji = bugLv === "高" ? "🔴" : (bugLv === "中" ? "🟠" : (bugLv === "低" ? "🟡" : ""));
+
     let result="";
 
     if (selectedGames.length){
@@ -930,10 +1076,17 @@ function updateTitle(){
         result = desc;
     }
 
-    document.getElementById("title-preview").value = toFullWidthSymbols(result);
+    // BUG 等級用 emoji 放在標題最前方（不單獨輸出一行）
+    if (bugEmoji) {
+        result = result ? `${bugEmoji} ${result}` : bugEmoji;
+    }
+
+    const __titleFW = toFullWidthSymbols(result);
+    document.getElementById("title-preview").value = __titleFW.replace(/＿/g, "_");
     updateFullPreview();
 }
 document.getElementById("problem-desc").addEventListener("input",updateTitle);
+document.getElementById("bug-level").addEventListener("change",updateTitle);
 
 /* --- 智能 OS 補字首 --- */
 function formatOS(prefix, value){
@@ -1079,17 +1232,14 @@ function syncSiteVersionsFromDOM(){
         if(betChk)  cfg.versions.betEnabled  = !!betChk.checked;
         if(gameInp) cfg.versions.game        = (gameInp.value || "").trim();
         if(betInp)  cfg.versions.bet         = (betInp.value || "").trim();
-
-        if (siteName === "試玩模式") {
-            cfg.versions.betEnabled = false;
-            cfg.versions.bet = "";
-        }
     });
 }
 
 function updateFullPreview(){
     const date = document.getElementById("incident_date").value;
+    const dateDisp = (date || "").trim() || "-";
     const tester = document.getElementById("tester").value;
+    const testerDisp = (tester || "").trim() || "-";
     const selectedSitesList = (window.selectedSites || []);
     const siteConfigs = (window.siteConfigs || {});
     const orderRaw = document.getElementById("order_id").value.trim();
@@ -1105,101 +1255,121 @@ function updateFullPreview(){
     const lines = [];
 
     // Header
-    lines.push(`發生時間：${date}`);
-    lines.push(`測試者：${tester}`);
+    lines.push(`發生時間：${dateDisp}`);
+    lines.push(`測試者：${testerDisp}`);
     lines.push(`站別：${selectedSitesList.length ? selectedSitesList.join("、") : "-"}`);
     lines.push("");
 
-    // 測試廳主／帳號 & 版本（單站別：不重複站別名；複數站別：站別底下巢狀條列）
-    if (selectedSitesList.length === 0) {
-        lines.push("測試廳主／帳號：");
+    
+// 測試廳主／帳號 & 版本（單站別：不重複站別名；複數站別：站別底下巢狀條列）
+if (selectedSitesList.length === 0) {
+    lines.push("測試廳主／帳號：");
+    lines.push("．-");
+    lines.push("");
+} else if (selectedSitesList.length === 1) {
+    const siteName = selectedSitesList[0];
+    const cfg = normSiteCfg(siteName);
+
+    // 測試廳主／帳號（試玩模式可獨立存在：若沒有一般廳主/帳號，就不輸出 '-'，直接略過該小段）
+    lines.push("測試廳主／帳號：");
+
+    const pairs = (cfg.pairs && cfg.pairs.length) ? cfg.pairs : [];
+    const trialOn = !!(cfg.trial && cfg.trial.enabled);
+
+    if (pairs.length) {
+        lines.push("．廳主／帳號：");
+        pairs.forEach(p => lines.push(`　．${p.hall}／${p.account}`));
+    }
+
+    if (trialOn) {
+        lines.push("．試玩模式：");
+        const halls = (cfg.trial.halls && cfg.trial.halls.length) ? cfg.trial.halls : [];
+        if (halls.length) halls.forEach(h => lines.push(`　．${h}`));
+        else lines.push("　．-");
+    }
+
+    if (!pairs.length && !trialOn) {
         lines.push("．-");
-        lines.push("");
+    }
 
-        lines.push("版本：");
-        lines.push("．-");
-        lines.push("");
-    } else if (selectedSitesList.length === 1) {
-        const siteName = selectedSitesList[0];
-        const cfg = siteConfigs[siteName] || { halls: [], pairs: [], versions: {} };
+    lines.push("");
 
-        // 測試廳主／帳號
-        lines.push("測試廳主／帳號：");
-        if (siteName === "試玩模式") {
-            const halls = (cfg.halls && cfg.halls.length) ? cfg.halls : [];
-            if (halls.length) halls.forEach(h => lines.push(`．${h}`));
-            else lines.push("．-");
-        } else {
-            const pairs = (cfg.pairs && cfg.pairs.length) ? cfg.pairs : [];
-            if (pairs.length) pairs.forEach(p => lines.push(`．${p.hall}／${p.account}`));
-            else lines.push("．-");
-        }
-        lines.push("");
-
-        // 版本
-        lines.push("版本：");
-        {
-            const v = cfg.versions || {};
-            let hasAny = false;
-
+    // 版本：若此站別沒有勾選任何版本，整段略過（避免「只需要試玩模式」時出現 '-'）
+    {
+        const v = cfg.versions || {};
+        const hasAny = !!(v.gameEnabled || v.betEnabled);
+        if (hasAny) {
+            lines.push("版本：");
             if (v.gameEnabled) {
                 const val = String(v.game || "").trim();
                 lines.push(`．遊戲版本：${val || "-"}`);
-                hasAny = true;
             }
-            if (siteName !== "試玩模式" && v.betEnabled) {
+            if (v.betEnabled) {
                 const val = String(v.bet || "").trim();
                 lines.push(`．投注歷程版本：${val || "-"}`);
-                hasAny = true;
             }
-
-            if (!hasAny) lines.push("．-");
+            lines.push("");
         }
-        lines.push("");
-    } else {
-        // 複數站別：站別底下巢狀條列
-        lines.push("測試廳主／帳號：");
-        selectedSitesList.forEach(siteName => {
-            const cfg = siteConfigs[siteName] || { halls: [], pairs: [], versions: {} };
-            lines.push(`．${siteName}：`);
+    }
+} else {
+    // 複數站別：站別底下巢狀條列
+    lines.push("測試廳主／帳號：");
+    selectedSitesList.forEach(siteName => {
+        const cfg = normSiteCfg(siteName);
 
-            if (siteName === "試玩模式") {
-                const halls = (cfg.halls && cfg.halls.length) ? cfg.halls : [];
-                if (halls.length) halls.forEach(h => lines.push(`　．${h}`));
-                else lines.push("　．-");
-            } else {
-                const pairs = (cfg.pairs && cfg.pairs.length) ? cfg.pairs : [];
-                if (pairs.length) pairs.forEach(p => lines.push(`　．${p.hall}／${p.account}`));
-                else lines.push("　．-");
-            }
-        });
-        lines.push("");
+        lines.push(`．${siteName}：`);
 
-        // 版本（複選：站別底下再條列）
+        const pairs = (cfg.pairs && cfg.pairs.length) ? cfg.pairs : [];
+        const trialOn = !!(cfg.trial && cfg.trial.enabled);
+
+        if (pairs.length) {
+            lines.push("　．廳主／帳號：");
+            pairs.forEach(p => lines.push(`　　．${p.hall}／${p.account}`));
+        }
+
+        if (trialOn) {
+            lines.push("　．試玩模式：");
+            const halls = (cfg.trial.halls && cfg.trial.halls.length) ? cfg.trial.halls : [];
+            if (halls.length) halls.forEach(h => lines.push(`　　．${h}`));
+            else lines.push("　　．-");
+        }
+
+        if (!pairs.length && !trialOn) {
+            lines.push("　．-");
+        }
+    });
+    lines.push("");
+
+    // 版本（複選：僅輸出有勾選版本的站別；若全都沒勾選則整段略過）
+    const anySiteHasVersion = selectedSitesList.some(siteName => {
+        const v = (normSiteCfg(siteName).versions || {});
+        return !!(v.gameEnabled || v.betEnabled);
+    });
+
+    if (anySiteHasVersion) {
         lines.push("版本：");
         selectedSitesList.forEach(siteName => {
-            const cfg = siteConfigs[siteName] || {};
+            const cfg = normSiteCfg(siteName);
             const v = cfg.versions || {};
+            const hasAny = !!(v.gameEnabled || v.betEnabled);
+            if (!hasAny) return;
 
             lines.push(`．${siteName}：`);
-
-            const parts = [];
             if (v.gameEnabled) {
                 const val = String(v.game || "").trim();
-                parts.push(`　．遊戲版本：${val || "-"}`);
+                lines.push(`　．遊戲版本：${val || "-"}`);
             }
-            if (siteName !== "試玩模式" && v.betEnabled) {
+            if (v.betEnabled) {
                 const val = String(v.bet || "").trim();
-                parts.push(`　．投注歷程版本：${val || "-"}`);
+                lines.push(`　．投注歷程版本：${val || "-"}`);
             }
-
-            if (parts.length) parts.forEach(p => lines.push(p));
-            else lines.push("　．-");
         });
         lines.push("");
     }
+}
 
-    // 裝置（空內容整段略過）
+// 裝置（空內容整段略過）
+
     const deviceLines = getDeviceLines();
     if (deviceLines.length) {
         lines.push("裝置：");
@@ -1343,7 +1513,7 @@ if (siteInput){
     siteInput.addEventListener("click", ()=> renderSiteList(""));
 }
 
-const siteList = ["測試站","正式站","開發站","試玩模式"];
+const siteList = ["測試站","正式站","開發站"];
 
 window.selectedSites = window.selectedSites || [];
 window.siteConfigs = window.siteConfigs || {}; // { [siteName]: {halls:[], pairs:[], versions:{...}} }
@@ -1360,6 +1530,16 @@ function normSiteCfg(siteName){
     if(typeof cfg.versions.betEnabled  !== "boolean") cfg.versions.betEnabled  = false;
     if(typeof cfg.versions.game !== "string") cfg.versions.game = "";
     if(typeof cfg.versions.bet  !== "string") cfg.versions.bet  = "";
+
+
+// ✅ 試玩模式（掛在站別上）：每站別可獨立啟用試玩廳主清單，版本沿用該站別版本
+if(!cfg.trial) cfg.trial = { enabled: false, halls: [] };
+if(typeof cfg.trial.enabled !== "boolean") cfg.trial.enabled = false;
+if(!Array.isArray(cfg.trial.halls)) cfg.trial.halls = [];
+// 舊資料相容：若曾用 cfg.halls 作為試玩廳主清單，搬到 cfg.trial.halls
+if(Array.isArray(cfg.halls) && cfg.halls.length && (!cfg.trial.halls || !cfg.trial.halls.length)){
+    cfg.trial.halls = cfg.halls.slice();
+}
 
     // 舊版相容：若曾使用 accounts（已停用），嘗試轉為 pairs（以索引配對）
     if(cfg.accounts && Array.isArray(cfg.accounts) && cfg.accounts.length && (!cfg.pairs || !cfg.pairs.length)){
@@ -1429,16 +1609,9 @@ function renderSiteList(keyword=""){
         div.className = "suggestion-item";
         div.textContent = s;
         div.addEventListener("mousedown", () => {
-            // 試玩模式：保持互斥（只留它）
-            if (s === "試玩模式") {
-                window.selectedSites = ["試玩模式"];
-                window.siteConfigs = { "試玩模式": normSiteCfg("試玩模式") };
-            } else {
-                // 若目前是試玩模式，先移除
-                window.selectedSites = window.selectedSites.filter(x => x !== "試玩模式");
-                if (!window.selectedSites.includes(s)) window.selectedSites.push(s);
-                normSiteCfg(s);
-            }
+            // ✅ 複選站別：測試站／正式站／開發站（試玩模式改為站別內的模式開關）
+            if (!window.selectedSites.includes(s)) window.selectedSites.push(s);
+            normSiteCfg(s);
 
             siteInput.value = "";
             renderSelectedSites();
@@ -1605,7 +1778,7 @@ function renderSiteConfigBlocks(){
     if(!host) return;
     host.innerHTML = "";
 
-    window.selectedSites.forEach(siteName => {
+    (window.selectedSites || []).forEach(siteName => {
         const cfg = normSiteCfg(siteName);
 
         const card = document.createElement("div");
@@ -1620,458 +1793,356 @@ function renderSiteConfigBlocks(){
         header.appendChild(title);
         card.appendChild(header);
 
-        // 試玩模式：邏輯保持（只選廳主，可複選；仍可填版本），但 UI／版面比照其他站別膠囊
-        if (siteName === "試玩模式") {
-            const rowPair = document.createElement("div");
-            rowPair.className = "site-config-row";
-            const fieldPair = document.createElement("div");
-            fieldPair.className = "field";
-            rowPair.appendChild(fieldPair);
-            card.appendChild(rowPair);
+        const row = document.createElement("div");
+        row.className = "site-config-row";
+        const field = document.createElement("div");
+        field.className = "field";
+        row.appendChild(field);
+        card.appendChild(row);
 
-            const addLine = document.createElement("div");
-            addLine.className = "pair-add-line";
+        /* ====== 一般廳主／帳號（1 對 1） ====== */
+        const addLine = document.createElement("div");
+        addLine.className = "pair-add-line";
 
-            // --- 單選廳主 input（autocomplete）---
-            const hallWrap = document.createElement("div");
-            hallWrap.className = "autocomplete-wrapper pair-hall-wrap";
-            const hallInput = document.createElement("input");
-            hallInput.type = "text";
-            hallInput.autocomplete = "new-password";
-            hallInput.placeholder = "選擇廳主";
-            hallInput.readOnly = true;
-            hallInput.setAttribute("inputmode","none");
-            hallInput.classList.add("menu-only");
-            const hallSugg = document.createElement("div");
-            hallSugg.className = "suggestions";
-            hallWrap.appendChild(hallInput);
-            hallWrap.appendChild(hallSugg);
+        // --- 廳主（menu-only） ---
+        const hallWrap = document.createElement("div");
+        hallWrap.className = "autocomplete-wrapper pair-hall-wrap";
+        const hallInput = document.createElement("input");
+        hallInput.type = "text";
+        hallInput.autocomplete = "new-password";
+        hallInput.placeholder = "選擇廳主";
+        hallInput.readOnly = true;
+        hallInput.setAttribute("inputmode","none");
+        hallInput.classList.add("menu-only");
+        const hallSugg = document.createElement("div");
+        hallSugg.className = "suggestions";
+        hallWrap.appendChild(hallInput);
+        hallWrap.appendChild(hallSugg);
 
-            // --- 佔位：對齊其他站別的「帳號欄」寬度（試玩模式不需要帳號）---
-            const dummyWrap = document.createElement("div");
-            dummyWrap.className = "autocomplete-wrapper pair-account-wrap trial-empty";
-            const dummyInput = document.createElement("input");
-            dummyInput.type = "text";
-            dummyInput.disabled = true;
-            dummyInput.tabIndex = -1;
-            dummyWrap.appendChild(dummyInput);
+        // --- 帳號（可輸入 + memory） ---
+        const accWrap = document.createElement("div");
+        accWrap.className = "autocomplete-wrapper pair-account-wrap";
+        const accInput = document.createElement("input");
+        accInput.type = "text";
+        accInput.autocomplete = "new-password";
+        accInput.placeholder = "輸入/搜尋帳號";
+        const accSugg = document.createElement("div");
+        accSugg.className = "suggestions";
+        accWrap.appendChild(accInput);
+        accWrap.appendChild(accSugg);
 
-            const addBtn = document.createElement("button");
-            addBtn.type = "button";
-            addBtn.className = "pair-add-btn";
-            addBtn.textContent = "加入";
+        const addBtn = document.createElement("button");
+        addBtn.type = "button";
+        addBtn.className = "pair-add-btn";
+        addBtn.textContent = "加入";
 
-            addLine.appendChild(hallWrap);
-            addLine.appendChild(dummyWrap);
-            addLine.appendChild(addBtn);
+        addLine.appendChild(hallWrap);
+        addLine.appendChild(accWrap);
+        addLine.appendChild(addBtn);
 
-            const chipBox = document.createElement("div");
-            chipBox.className = "selected-chips";
-            chipBox.style.visibility = "hidden";
-            chipBox.style.marginTop = "2px";
+        const pairChipBox = document.createElement("div");
+        pairChipBox.className = "selected-chips";
+        pairChipBox.style.visibility = "hidden";
+        pairChipBox.style.marginTop = "2px";
 
-            fieldPair.appendChild(addLine);
-            fieldPair.appendChild(chipBox);
+        field.appendChild(addLine);
+        field.appendChild(pairChipBox);
 
-            const renderHalls = () => {
-                chipBox.innerHTML = "";
-                const halls = cfg.halls || [];
-                // ✅ 預留高度避免加入第一顆 chip 時推擠卡片
-                chipBox.style.visibility = halls.length ? "visible" : "hidden";
-                halls.forEach((h, idx) => {
-                    const chip = document.createElement("div");
-                    chip.className = "game-chip";
-                    chip.textContent = h;
-                    const btn = document.createElement("button");
-                    btn.type = "button";
-                    btn.textContent = "×";
-                    btn.addEventListener("click", () => {
-                        const arr = (cfg.halls || []).slice();
-                        arr.splice(idx, 1);
-                        cfg.halls = arr;
-                        renderHalls();
-                        updateFullPreview();
-                    });
-                    chip.appendChild(btn);
-                    chipBox.appendChild(chip);
+        const renderHallSuggest = (filter="") => {
+            const kw = filter.trim().toLowerCase();
+            hallSugg.innerHTML = "";
+            const matches = (HALL_OPTIONS||[]).filter(v => v.toLowerCase().includes(kw));
+            matches.forEach(v => {
+                const div = document.createElement("div");
+                div.className = "suggestion-item";
+                div.textContent = v;
+                div.addEventListener("mousedown", () => {
+                    hallInput.value = v;
+                    hallSugg.style.display = "none";
                 });
-            };
-
-            const renderHallSuggest = (filter="") => {
-                const kw = filter.trim().toLowerCase();
-                hallSugg.innerHTML = "";
-                const matches = (HALL_OPTIONS||[]).filter(v => v.toLowerCase().includes(kw));
-                matches.forEach(v => {
-                    const div = document.createElement("div");
-                    div.className = "suggestion-item";
-                    div.textContent = v;
-                    div.addEventListener("mousedown", () => {
-                        hallInput.value = v;
-                        hallSugg.style.display = "none";
-                    });
-                    hallSugg.appendChild(div);
-                });
-                hallSugg.style.display = matches.length ? "block" : "none";
-            };
-
-            const addHall = () => {
-                const hall = hallInput.value.trim();
-                if(!hall){
-                    alert('請先選擇廳主');
-                    return;
-                }
-                const arr = (cfg.halls || []).slice();
-                if(!arr.includes(hall)) arr.push(hall);
-                cfg.halls = arr;
-                hallInput.value = "";
-                renderHalls();
-                updateFullPreview();
-            };
-
-            addBtn.addEventListener("click", addHall);
-            hallInput.addEventListener("focus", () => renderHallSuggest(""));
-            // hallInput 為 menu-only，不需要 input 過濾（保留以防未來需求）
-            hallInput.addEventListener("input", () => renderHallSuggest(hallInput.value));
-            hallInput.addEventListener("keydown", (e) => {
-                if(e.key === "Enter"){
-                    addHall();
-                    e.preventDefault();
-                    return;
-                }
-                if (e.key !== "Tab" && e.key !== "Shift") e.preventDefault();
+                hallSugg.appendChild(div);
             });
-            document.addEventListener("click", (e) => {
-                if (!hallWrap.contains(e.target)) hallSugg.style.display = "none";
-            });
+            hallSugg.style.display = matches.length ? "block" : "none";
+        };
 
-            renderHalls();
-
-            // 試玩模式不使用『投注歷程版本』：強制關閉並清空（避免舊值影響輸出）
-            cfg.versions.betEnabled = false;
-            cfg.versions.bet = "";
-
-            // --- 版本（每站別各自設定；試玩模式也需要；預留高度避免推擠）---
-            const vBlock = document.createElement("div");
-            vBlock.className = "site-version-block";
-
-            const makeVersionLine = (text, enabledKey, valueKey, memKey, placeholder) => {
-                const line = document.createElement("div");
-                line.className = "site-version-line";
-
-                const lab = document.createElement("label");
-                const chk = document.createElement("input");
-                chk.type = "checkbox";
-                chk.checked = !!cfg.versions[enabledKey];
-                chk.dataset.site = siteName;
-                chk.dataset.vkey = enabledKey;
-                lab.appendChild(chk);
-                lab.appendChild(document.createTextNode(" " + text));
-
-                const wrap = document.createElement("div");
-                wrap.className = "autocomplete-wrapper";
-                if(!chk.checked) wrap.classList.add("v-hidden");
-
-                const inp = document.createElement("input");
-                inp.type = "text";
-                inp.autocomplete = "new-password";
-                inp.placeholder = placeholder;
-                inp.value = (cfg.versions[valueKey] || "");
-                inp.dataset.site = siteName;
-                inp.dataset.vkey = valueKey;
-
-                const sugg = document.createElement("div");
-                sugg.className = "suggestions";
-
-                wrap.appendChild(inp);
-                wrap.appendChild(sugg);
-
-                inp.disabled = !chk.checked;
-
-                chk.addEventListener("change", () => {
-                    cfg.versions[enabledKey] = chk.checked;
-                    wrap.classList.toggle("v-hidden", !chk.checked);
-                    inp.disabled = !chk.checked;
-                    updateFullPreview();
-                });
-                inp.addEventListener("input", () => {
-                    cfg.versions[valueKey] = inp.value;
-                    updateFullPreview();
-                });
-
-                setupMemoryFieldElement(inp, memKey);
-
-                line.appendChild(lab);
-                line.appendChild(wrap);
-                return line;
-            };
-
-            vBlock.appendChild(
-                makeVersionLine(
-                    "遊戲版本",
-                    "gameEnabled",
-                    "game",
-                    `version_game_${siteName}`,
-                    "輸入遊戲版本號碼"
-                )
-            );
-            fieldPair.appendChild(vBlock);
-        } else {
-            // 其他站別：廳主 ↔ 帳號（1 對 1 綁定），以「配對」方式加入
-            const rowPair = document.createElement("div");
-            rowPair.className = "site-config-row";
-            const fieldPair = document.createElement("div");
-            fieldPair.className = "field";
-            rowPair.appendChild(fieldPair);
-            card.appendChild(rowPair);
-
-            const addLine = document.createElement("div");
-            addLine.className = "pair-add-line";
-
-            // --- 單選廳主 input（autocomplete） ---
-            const hallWrap = document.createElement("div");
-            hallWrap.className = "autocomplete-wrapper pair-hall-wrap";
-            const hallInput = document.createElement("input");
-            hallInput.type = "text";
-            hallInput.autocomplete = "new-password";
-            hallInput.placeholder = "選擇廳主";
-            hallInput.readOnly = true;
-            hallInput.setAttribute("inputmode","none");
-            hallInput.classList.add("menu-only");
-            const hallSugg = document.createElement("div");
-            hallSugg.className = "suggestions";
-            hallWrap.appendChild(hallInput);
-            hallWrap.appendChild(hallSugg);
-
-            // --- 單選/輸入帳號 input（autocomplete + memory） ---
-            const accWrap = document.createElement("div");
-            accWrap.className = "autocomplete-wrapper pair-account-wrap";
-            const accInput = document.createElement("input");
-            accInput.type = "text";
-            accInput.autocomplete = "new-password";
-            accInput.placeholder = "輸入/搜尋帳號";
-            const accSugg = document.createElement("div");
-            accSugg.className = "suggestions";
-            accWrap.appendChild(accInput);
-            accWrap.appendChild(accSugg);
-
-            const addBtn = document.createElement("button");
-            addBtn.type = "button";
-            addBtn.className = "pair-add-btn";
-            addBtn.textContent = "加入";
-
-            addLine.appendChild(hallWrap);
-            addLine.appendChild(accWrap);
-            addLine.appendChild(addBtn);
-
-            const chipBox = document.createElement("div");
-            chipBox.className = "selected-chips";
-            chipBox.style.visibility = "hidden";
-            chipBox.style.marginTop = "2px";
-
-            fieldPair.appendChild(addLine);
-            fieldPair.appendChild(chipBox);
-
-            // --- 版本（每站別各自設定；試玩模式不顯示） ---
-            const vBlock = document.createElement("div");
-            vBlock.className = "site-version-block";
-
-            const makeVersionLine = (text, enabledKey, valueKey, memKey, placeholder) => {
-                const line = document.createElement("div");
-                line.className = "site-version-line";
-
-                const lab = document.createElement("label");
-                const chk = document.createElement("input");
-                chk.type = "checkbox";
-                chk.checked = !!cfg.versions[enabledKey];
-                // 標記：供輸出時同步 DOM 內容
-                chk.dataset.site = siteName;
-                chk.dataset.vkey = enabledKey;
-                lab.appendChild(chk);
-                lab.appendChild(document.createTextNode(" " + text));
-
-                const wrap = document.createElement("div");
-                wrap.className = "autocomplete-wrapper";
-                // ✅ 永遠保留佔位：用 visibility 來隱藏，避免勾選後整個膠囊被推擠
-                if(!chk.checked) wrap.classList.add("v-hidden");
-
-                const inp = document.createElement("input");
-                inp.type = "text";
-                inp.autocomplete = "new-password";
-                inp.placeholder = placeholder;
-                inp.value = (cfg.versions[valueKey] || "");
-                // 標記：供輸出時同步 DOM 內容
-                inp.dataset.site = siteName;
-                inp.dataset.vkey = valueKey;
-
-                const sugg = document.createElement("div");
-                sugg.className = "suggestions";
-
-                wrap.appendChild(inp);
-                wrap.appendChild(sugg);
-
-                // 初始狀態：未勾選時避免 tab 進入隱藏欄位
-                inp.disabled = !chk.checked;
-
-                chk.addEventListener("change", () => {
-                    cfg.versions[enabledKey] = chk.checked;
-                    wrap.classList.toggle("v-hidden", !chk.checked);
-                    inp.disabled = !chk.checked;
-                    updateFullPreview();
-                });
-                inp.addEventListener("input", () => {
-                    cfg.versions[valueKey] = inp.value;
-                    updateFullPreview();
-                });
-
-                // autocomplete + localStorage memory
-                setupMemoryFieldElement(inp, memKey);
-
-                line.appendChild(lab);
-                line.appendChild(wrap);
-                return line;
-            };
-
-            vBlock.appendChild(
-                makeVersionLine(
-                    "遊戲版本",
-                    "gameEnabled",
-                    "game",
-                    `version_game_${siteName}`,
-                    "輸入遊戲版本號碼"
-                )
-            );
-            vBlock.appendChild(
-                makeVersionLine(
-                    "投注歷程版本",
-                    "betEnabled",
-                    "bet",
-                    `version_bet_${siteName}`,
-                    "輸入投注歷程版本號碼"
-                )
-            );
-
-            fieldPair.appendChild(vBlock);
-
-            // memory list for accounts
-            const accMemKey = `account_${siteName}`;
-            let accMem = [];
-            try { accMem = JSON.parse(localStorage.getItem(accMemKey)) || []; } catch { accMem = []; }
-            const saveAccMem = (v) => {
-                if(!v) return;
-                if(!accMem.includes(v)) {
-                    accMem.push(v);
-                    localStorage.setItem(accMemKey, JSON.stringify(accMem));
-                }
-            };
-
-            const renderHallSuggest = (filter="") => {
-                const kw = filter.trim().toLowerCase();
-                hallSugg.innerHTML = "";
-                const matches = (HALL_OPTIONS||[]).filter(v => v.toLowerCase().includes(kw));
-                matches.forEach(v => {
-                    const div = document.createElement("div");
-                    div.className = "suggestion-item";
-                    div.textContent = v;
-                    div.addEventListener("mousedown", () => {
-                        hallInput.value = v;
-                        hallSugg.style.display = "none";
-                    });
-                    hallSugg.appendChild(div);
-                });
-                hallSugg.style.display = matches.length ? "block" : "none";
-            };
-
-            const renderAccSuggest = (filter="") => {
-                const kw = filter.trim().toLowerCase();
-                accSugg.innerHTML = "";
-                const uniq = Array.from(new Set(accMem));
-                const matches = uniq.filter(v => v.toLowerCase().includes(kw));
-                matches.forEach(v => {
-                    const div = document.createElement("div");
-                    div.className = "suggestion-item";
-                    div.textContent = v;
-                    div.addEventListener("mousedown", () => {
-                        accInput.value = v;
-                        accSugg.style.display = "none";
-                    });
-                    accSugg.appendChild(div);
-                });
-                accSugg.style.display = matches.length ? "block" : "none";
-            };
-
-            const renderPairs = () => {
-                chipBox.innerHTML = "";
-                const pairs = cfg.pairs || [];
-                // ✅ 預留高度避免加入第一顆 chip 時推擠卡片
-                chipBox.style.visibility = pairs.length ? "visible" : "hidden";
-                pairs.forEach((p, idx) => {
-                    const chip = document.createElement("div");
-                    chip.className = "game-chip";
-                    chip.textContent = `${p.hall}／${p.account}`;
-                    const btn = document.createElement("button");
-                    btn.type = "button";
-                    btn.textContent = "×";
-                    btn.addEventListener("click", () => {
-                        const arr = (cfg.pairs || []).slice();
-                        arr.splice(idx, 1);
-                        cfg.pairs = arr;
-                        renderPairs();
-                        updateFullPreview();
-                    });
-                    chip.appendChild(btn);
-                    chipBox.appendChild(chip);
-                });
-            };
-
-            const addPair = () => {
-                const hall = hallInput.value.trim();
-                const acc  = accInput.value.trim();
-                if(!hall || !acc){
-                    alert('請先選擇廳主並輸入帳號');
-                    return;
-                }
-                const arr = (cfg.pairs || []).slice();
-                const i = arr.findIndex(x => x.hall === hall);
-                if(i >= 0){
-                    // 一個廳主只能綁一個帳號：直接更新為新帳號
-                    arr[i] = { hall, account: acc };
-                } else {
-                    arr.push({ hall, account: acc });
-                }
-                cfg.pairs = arr;
-                saveAccMem(acc);
-                hallInput.value = "";
-                accInput.value  = "";
-                renderPairs();
-                updateFullPreview();
-            };
-
-            addBtn.addEventListener("click", addPair);
-
-            hallInput.addEventListener("focus", () => renderHallSuggest(""));
-            // hallInput 為 menu-only，不需要 input 過濾（保留以防未來需求）
-            hallInput.addEventListener("input", () => renderHallSuggest(hallInput.value));
-            hallInput.addEventListener("keydown", (e) => {
-                if (e.key !== "Tab" && e.key !== "Shift") e.preventDefault();
-            });
-
-            accInput.addEventListener("focus", () => renderAccSuggest(""));
-            accInput.addEventListener("input", () => renderAccSuggest(accInput.value));
-
-            accInput.addEventListener("keydown", (e) => {
-                if(e.key === "Enter"){
-                    addPair();
-                    e.preventDefault();
-                }
-            });
-
-            document.addEventListener("click", (e) => {
-                if (!hallWrap.contains(e.target)) hallSugg.style.display = "none";
-                if (!accWrap.contains(e.target))  accSugg.style.display  = "none";
-            });
-
+        const addPair = () => {
+            const hall = hallInput.value.trim();
+            const acc  = accInput.value.trim();
+            if(!hall){
+                alert("請先選擇廳主");
+                return;
+            }
+            if(!acc){
+                alert("請先輸入帳號");
+                return;
+            }
+            const pairs = Array.isArray(cfg.pairs) ? cfg.pairs.slice() : [];
+            // 允許同一站別加入多組廳主／帳號；避免完全重複（同廳主＋同帳號）
+            const dup = pairs.some(p => (p.hall||"").trim() === hall && (p.account||"").trim() === acc);
+            if(!dup) pairs.push({ hall, account: acc });
+            cfg.pairs = pairs;
+            hallInput.value = "";
+            accInput.value = "";
             renderPairs();
-        }
+            updateFullPreview();
+        };
+
+        addBtn.addEventListener("click", addPair);
+
+        hallInput.addEventListener("focus", () => renderHallSuggest(""));
+        hallInput.addEventListener("input", () => renderHallSuggest(hallInput.value));
+        hallInput.addEventListener("keydown", (e) => {
+            if(e.key === "Enter"){
+                addPair();
+                e.preventDefault();
+                return;
+            }
+            if (e.key !== "Tab" && e.key !== "Shift") e.preventDefault();
+        });
+        document.addEventListener("click", (e) => {
+            if (!hallWrap.contains(e.target)) hallSugg.style.display = "none";
+        });
+
+        setupMemoryFieldElement(accInput, `account_${siteName}`);
+
+        const renderPairs = () => {
+            pairChipBox.innerHTML = "";
+            const pairs = Array.isArray(cfg.pairs) ? cfg.pairs : [];
+            pairChipBox.style.visibility = pairs.length ? "visible" : "hidden";
+            pairs.forEach((p, idx) => {
+                const chip = document.createElement("div");
+                chip.className = "game-chip";
+                chip.textContent = `${p.hall}／${p.account}`;
+                const btn = document.createElement("button");
+                btn.type = "button";
+                btn.textContent = "×";
+                btn.addEventListener("click", () => {
+                    const arr = pairs.slice();
+                    arr.splice(idx, 1);
+                    cfg.pairs = arr;
+                    renderPairs();
+                    updateFullPreview();
+                });
+                chip.appendChild(btn);
+                pairChipBox.appendChild(chip);
+            });
+        };
+        renderPairs();
+
+        /* ====== 試玩模式（掛在站別上） ====== */
+        // UI：放在版本區塊最上方（在「遊戲版本」上面），輸入框對齊版本輸入框，加入按鈕對齊一般加入按鈕
+
+        /* ====== 版本（每站別各自設定） ====== */
+        const vBlock = document.createElement("div");
+        vBlock.className = "site-version-block";
+
+
+        // --- 試玩模式（每站別可獨立啟用；版本沿用該站別版本）---
+        const tLine = document.createElement("div");
+        tLine.className = "trial-line";
+
+        const tLab = document.createElement("label");
+        const tChk = document.createElement("input");
+        tChk.type = "checkbox";
+        tChk.checked = !!(cfg.trial && cfg.trial.enabled);
+        tLab.appendChild(tChk);
+        tLab.appendChild(document.createTextNode(" 試玩模式"));
+        tLine.appendChild(tLab);
+
+        // 右側：試玩廳主選單 + 加入（對齊廳主/帳號的「帳號欄」與加入按鈕）
+        const tHallWrap = document.createElement("div");
+        tHallWrap.className = "autocomplete-wrapper";
+        const tHallInput = document.createElement("input");
+        tHallInput.type = "text";
+        tHallInput.autocomplete = "new-password";
+        tHallInput.placeholder = "選擇廳主";
+        tHallInput.readOnly = true;
+        tHallInput.setAttribute("inputmode","none");
+        tHallInput.classList.add("menu-only");
+        const tHallSugg = document.createElement("div");
+        tHallSugg.className = "suggestions";
+        tHallWrap.appendChild(tHallInput);
+        tHallWrap.appendChild(tHallSugg);
+
+        const tAddBtn = document.createElement("button");
+        tAddBtn.type = "button";
+        tAddBtn.className = "pair-add-btn";
+        tAddBtn.textContent = "加入";
+
+        tLine.appendChild(tHallWrap);
+        tLine.appendChild(tAddBtn);
+
+        // 試玩廳主 chips（預留高度避免推擠）
+        const tChipBox = document.createElement("div");
+        tChipBox.className = "selected-chips";
+        tChipBox.style.visibility = "hidden";
+        tChipBox.style.marginTop = "2px";
+
+        const renderTrialSuggest = (filter="") => {
+            const kw = filter.trim().toLowerCase();
+            tHallSugg.innerHTML = "";
+            const matches = (HALL_OPTIONS||[]).filter(v => v.toLowerCase().includes(kw));
+            matches.forEach(v => {
+                const div = document.createElement("div");
+                div.className = "suggestion-item";
+                div.textContent = v;
+                div.addEventListener("mousedown", () => {
+                    tHallInput.value = v;
+                    tHallSugg.style.display = "none";
+                });
+                tHallSugg.appendChild(div);
+            });
+            tHallSugg.style.display = matches.length ? "block" : "none";
+        };
+
+        const renderTrialHalls = () => {
+            tChipBox.innerHTML = "";
+            const halls = (cfg.trial && Array.isArray(cfg.trial.halls)) ? cfg.trial.halls : [];
+            tChipBox.style.visibility = halls.length ? "visible" : "hidden";
+            halls.forEach((h, idx) => {
+                const chip = document.createElement("div");
+                chip.className = "game-chip";
+                chip.textContent = h;
+                const btn = document.createElement("button");
+                btn.type = "button";
+                btn.textContent = "×";
+                btn.addEventListener("click", () => {
+                    const arr = halls.slice();
+                    arr.splice(idx, 1);
+                    cfg.trial.halls = arr;
+                    renderTrialHalls();
+                    updateFullPreview();
+                });
+                chip.appendChild(btn);
+                tChipBox.appendChild(chip);
+            });
+        };
+
+        const addTrialHall = () => {
+            const hall = tHallInput.value.trim();
+            if(!hall){
+                alert("請先選擇廳主");
+                return;
+            }
+            const halls = (cfg.trial && Array.isArray(cfg.trial.halls)) ? cfg.trial.halls.slice() : [];
+            if(!halls.includes(hall)) halls.push(hall);
+            cfg.trial.halls = halls;
+            tHallInput.value = "";
+            renderTrialHalls();
+            updateFullPreview();
+        };
+
+        const applyTrialVisibility = () => {
+            const on = !!tChk.checked;
+            if(!cfg.trial) cfg.trial = { enabled: false, halls: [] };
+            cfg.trial.enabled = on;
+            // 為避免推擠：使用 visibility 保留高度
+            tHallWrap.classList.toggle("v-hidden", !on);
+            tHallWrap.style.pointerEvents = on ? "auto" : "none";
+            tAddBtn.classList.toggle("v-hidden", !on);
+            tAddBtn.style.pointerEvents = on ? "auto" : "none";
+            tChipBox.style.visibility = (on && (cfg.trial.halls||[]).length) ? "visible" : "hidden";
+            tChipBox.style.opacity = on ? "1" : "0";
+            tChipBox.style.pointerEvents = on ? "auto" : "none";
+        };
+
+        tAddBtn.addEventListener("click", addTrialHall);
+        tHallInput.addEventListener("focus", () => renderTrialSuggest(""));
+        tHallInput.addEventListener("input", () => renderTrialSuggest(tHallInput.value));
+        tHallInput.addEventListener("keydown", (e) => {
+            if(e.key === "Enter"){
+                addTrialHall();
+                e.preventDefault();
+                return;
+            }
+            if (e.key !== "Tab" && e.key !== "Shift") e.preventDefault();
+        });
+        document.addEventListener("click", (e) => {
+            if (!tHallWrap.contains(e.target)) tHallSugg.style.display = "none";
+        });
+
+        tChk.addEventListener("change", () => {
+            applyTrialVisibility();
+            updateFullPreview();
+        });
+
+        renderTrialHalls();
+        applyTrialVisibility();
+
+        vBlock.appendChild(tLine);
+        vBlock.appendChild(tChipBox);
+        const makeVersionLine = (text, enabledKey, valueKey, memKey, placeholder) => {
+            const line = document.createElement("div");
+            line.className = "site-version-line";
+
+            const lab = document.createElement("label");
+            const chk = document.createElement("input");
+            chk.type = "checkbox";
+            chk.checked = !!cfg.versions[enabledKey];
+            chk.dataset.site = siteName;
+            chk.dataset.vkey = enabledKey;
+            lab.appendChild(chk);
+            lab.appendChild(document.createTextNode(" " + text));
+
+            const wrap = document.createElement("div");
+            wrap.className = "autocomplete-wrapper";
+            if(!chk.checked) wrap.classList.add("v-hidden");
+
+            const inp = document.createElement("input");
+            inp.type = "text";
+            inp.autocomplete = "new-password";
+            inp.placeholder = placeholder;
+            inp.value = (cfg.versions[valueKey] || "");
+            inp.dataset.site = siteName;
+            inp.dataset.vkey = valueKey;
+
+            const sugg = document.createElement("div");
+            sugg.className = "suggestions";
+
+            wrap.appendChild(inp);
+            wrap.appendChild(sugg);
+
+            inp.disabled = !chk.checked;
+
+            chk.addEventListener("change", () => {
+                cfg.versions[enabledKey] = chk.checked;
+                wrap.classList.toggle("v-hidden", !chk.checked);
+                inp.disabled = !chk.checked;
+                updateFullPreview();
+            });
+            inp.addEventListener("input", () => {
+                cfg.versions[valueKey] = inp.value;
+                updateFullPreview();
+            });
+
+            setupMemoryFieldElement(inp, memKey);
+
+            line.appendChild(lab);
+            line.appendChild(wrap);
+            return line;
+        };
+
+        vBlock.appendChild(
+            makeVersionLine(
+                "遊戲版本",
+                "gameEnabled",
+                "game",
+                `version_game_${siteName}`,
+                "輸入遊戲版本號碼"
+            )
+        );
+
+        vBlock.appendChild(
+            makeVersionLine(
+                "投注歷程版本",
+                "betEnabled",
+                "bet",
+                `version_bet_${siteName}`,
+                "輸入投注歷程版本號碼"
+            )
+        );
+
+        field.appendChild(vBlock);
 
         host.appendChild(card);
     });
@@ -2116,7 +2187,7 @@ window.addEventListener("DOMContentLoaded",()=>{
 
     // 基本欄位
     [
-        "incident_date","order_id",
+        "incident_date","tester","order_id",
         "problem-desc",
         "operation_editor","actual_editor","expected_editor","remark_editor"
     ].forEach(id=>{
@@ -2143,6 +2214,25 @@ window.addEventListener("DOMContentLoaded",()=>{
     updateFullPreview();
 });
 </script>
-
+<script>
+(function(){
+  function applyBugTableTooltips(){
+    var cells = document.querySelectorAll('.bug-level-table th, .bug-level-table td');
+    cells.forEach(function(el){
+      el.removeAttribute('title');
+      // 只在真的被省略時才加 title（方便查看完整文字）
+      if (el.scrollWidth > el.clientWidth) {
+        el.setAttribute('title', (el.textContent || '').trim());
+      }
+    });
+  }
+  window.addEventListener('load', function(){
+    requestAnimationFrame(applyBugTableTooltips);
+  });
+  window.addEventListener('resize', function(){
+    requestAnimationFrame(applyBugTableTooltips);
+  });
+})();
+</script>
 </body>
 </html>
