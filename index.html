@@ -1026,12 +1026,10 @@ function toFullWidthSymbols(str){
     return String(str)
         .replace(/\\/g, "＼")
         .replace(/\//g, "／")
-        .replace(/_/g, "＿")
         .replace(/-/g, "－")
         .replace(/:/g, "：")
         .replace(/;/g, "；")
         .replace(/,/g, "，")
-        .replace(/\./g, "．")
         .replace(/\?/g, "？")
         .replace(/!/g, "！")
         .replace(/\(/g, "（")
@@ -1082,7 +1080,7 @@ function updateTitle(){
     }
 
     const __titleFW = toFullWidthSymbols(result);
-    document.getElementById("title-preview").value = __titleFW.replace(/＿/g, "_");
+    document.getElementById("title-preview").value = __titleFW;
     updateFullPreview();
 }
 document.getElementById("problem-desc").addEventListener("input",updateTitle);
