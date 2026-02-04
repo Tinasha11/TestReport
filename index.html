@@ -215,6 +215,8 @@
             justify-content: center;
             gap: 12px;
             margin: 20px 0;
+            flex-wrap: wrap;
+            align-items: center;
         }
 
         .button-row button {
@@ -241,7 +243,12 @@
             width: 735px !important;
         }        
 
-        #bug_def {
+        
+
+        #title-serial {
+            width: 160px;
+        }
+#bug_def {
             width: 644px !important;
         }
 
@@ -659,6 +666,169 @@
 .bug-level-table td{
   text-align: center;
 }
+
+        /* ====== 暫存 / 存檔 UI ====== */
+        .banner {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: #fff6d6;
+            border: 1px solid #f3d37b;
+            margin: 14px 0 0;
+        }
+        .banner .banner-actions{
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .banner button{
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: none;
+            background: #333;
+            color: #fff;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .banner button.secondary{
+            background: #777;
+        }
+
+        .modal-overlay{
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            z-index: 9999;
+        }
+        .modal{
+            width: min(920px, 100%);
+            max-height: 85vh;
+            overflow: auto;
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+            padding: 18px 18px 14px;
+        }
+        .modal-header{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .modal-title{
+            font-size: 18px;
+            font-weight: 800;
+        }
+        .modal-close{
+            border: none;
+            background: #eee;
+            padding: 8px 12px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+        .save-grid{
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
+        }
+        .save-card{
+            border: 1px solid #e6e6e6;
+            border-radius: 12px;
+            padding: 14px;
+            background: #fafafa;
+        }
+        .save-card h3{
+            margin: 0 0 8px;
+            font-size: 15px;
+        }
+        .save-row{
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .save-row input[type="text"]{
+            flex: 1 1 280px;
+            min-width: 220px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
+        .save-row button{
+            padding: 9px 14px;
+            border-radius: 999px;
+            border: none;
+            background: #4a90e2;
+            color: #fff;
+            cursor: pointer;
+            font-weight: 700;
+        }
+        .save-row button.danger{ background: #d64545; }
+        .save-row button.gray{ background: #666; }
+
+        .save-list{
+            margin-top: 10px;
+            display: grid;
+            gap: 10px;
+        }
+        .save-item{
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid #e6e6e6;
+            background: #fff;
+        }
+        .save-meta{
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+        .save-name{
+            font-weight: 800;
+            word-break: break-word;
+        }
+        .save-time{
+            color: #666;
+            font-size: 12px;
+        }
+        .save-actions{
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        .save-actions button{
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            background: #4a90e2;
+            color: #fff;
+        }
+        .save-actions button.danger{ background: #d64545; }
+        .save-actions button.gray{ background: #666; }
+
+        .muted{
+            color: #666;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
 </style>
 <style>
 select option[disabled]{display:none;}
@@ -666,6 +836,17 @@ select option[disabled]{display:none;}
 </head>
 <body autocomplete="off">
 <div class="container">
+<div id="draft-banner" class="banner">
+  <div>
+    <strong>偵測到上次未送出的暫存。</strong>
+    <span class="muted" id="draft-banner-time"></span>
+  </div>
+  <div class="banner-actions">
+    <button id="load-draft-btn">載入暫存</button>
+    <button id="discard-draft-btn" class="secondary">忽略</button>
+  </div>
+</div>
+
 <h1>任務回報模板產生器</h1>
 <!-- 任務標題 -->
 <div class="title-section">
@@ -678,6 +859,11 @@ select option[disabled]{display:none;}
 <div class="suggestions" id="game-suggestions"></div>
 <div id="selected-games" style="margin-top:6px;font-size:0.9rem;color:#333;"></div>
 </div>
+</div>
+<!-- 標題序號 -->
+<div class="form-row">
+<label>標題序號：</label>
+<input autocomplete="new-password" id="title-serial" name="nohistory-serial" placeholder="無需列序號可跳過" type="text" inputmode="numeric" pattern="[0-9]*"/>
 </div>
 <!-- 問題描述 -->
 <div class="form-row">
@@ -846,6 +1032,7 @@ select option[disabled]{display:none;}
 <div class="button-row">
 <button id="copy-title-btn">複製標題</button>
 <button id="copy-btn">一鍵複製</button>
+<button id="open-save-modal-btn">存檔／讀檔</button>
 </div>
 <!-- 預覽 -->
 <div class="section">
@@ -854,6 +1041,38 @@ select option[disabled]{display:none;}
 <textarea id="full-preview" readonly="" rows="16"></textarea>
 </div>
 </div>
+
+<!-- ====== 暫存 / 存檔 Modal ====== -->
+<div id="save-modal-overlay" class="modal-overlay" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="save-modal-title">
+    <div class="modal-header">
+      <div class="modal-title" id="save-modal-title">暫存 / 存檔</div>
+      <button class="modal-close" id="close-save-modal-btn" type="button">關閉</button>
+    </div>
+
+    <div class="save-grid">
+      <div class="save-card">
+        <h3>暫存（自動）</h3>
+        <div class="muted" id="draft-status">尚未建立暫存。</div>
+        <div class="save-row" style="margin-top:10px;">
+          <button id="load-draft-btn-2" type="button">載入暫存</button>
+          <button id="clear-draft-btn" class="danger" type="button">清除暫存</button>
+</div>
+      </div>
+
+      <div class="save-card">
+        <h3>存檔（可多份）</h3>
+        <div class="save-row">
+          <input id="save-name-input" type="text" placeholder="輸入存檔名稱（例如：2026-02-03 正式站重現）" />
+          <button id="create-save-btn" type="button">建立存檔</button>
+        </div>
+        <div class="muted" style="margin-top:8px;">提示：可建立多個存檔；每筆存檔都能「讀取 / 覆蓋 / 刪除」。</div>
+        <div class="save-list" id="save-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ===================== JS ======================= -->
 <script>
 /* 設定今日日期 */
@@ -937,12 +1156,51 @@ function autoSizeGameInput(){
 
 let selectedGames = []; // [{id,name}]
 
+const titleSerialInput = document.getElementById("title-serial");
+
+/* --- 遊戲 vs 標題序號：二擇一互斥 --- */
+function syncTitleGameExclusive(){
+    if(!gameInput || !titleSerialInput) return;
+
+    const hasSerial = (titleSerialInput.value || "").trim() !== "";
+    const hasGame = Array.isArray(selectedGames) && selectedGames.length > 0;
+
+    if(hasSerial){
+        // 序號有值 → 清空遊戲並鎖住遊戲輸入
+        if(hasGame){
+            selectedGames = [];
+            try{ renderSelectedGames(); }catch(e){}
+        }
+        gameInput.value = "";
+        try{ autoSizeGameInput(); }catch(e){}
+        try{ gameSuggest.style.display = "none"; }catch(e){}
+        gameInput.disabled = true;
+        titleSerialInput.disabled = false;
+    }else if(hasGame){
+        // 有選遊戲 → 清空序號並鎖住序號輸入
+        if((titleSerialInput.value || "").trim() !== ""){
+            titleSerialInput.value = "";
+        }
+        titleSerialInput.disabled = true;
+        gameInput.disabled = false;
+    }else{
+        // 都沒有 → 兩者都解鎖
+        gameInput.disabled = false;
+        titleSerialInput.disabled = false;
+    }
+}
+
 // 初始 + 互動時自動調整欄位寬度
 autoSizeGameInput();
 gameInput.addEventListener('input', autoSizeGameInput);
 window.addEventListener('resize', () => {
     // 讓 reflow 後再量測一次
     requestAnimationFrame(autoSizeGameInput);
+});
+
+titleSerialInput && titleSerialInput.addEventListener('input', () => {
+    syncTitleGameExclusive();
+    updateTitle();
 });
 
 
@@ -960,6 +1218,7 @@ function renderSelectedGames(){
         btn.addEventListener("click", () => {
             selectedGames.splice(idx, 1);
             renderSelectedGames();
+            syncTitleGameExclusive();
             updateTitle();
         });
 
@@ -985,6 +1244,7 @@ function renderGameList(keyword=""){
         gameInput.value = "";
         autoSizeGameInput();
         renderSelectedGames();
+        syncTitleGameExclusive();
         gameSuggest.style.display = "none";
         updateTitle();
     });
@@ -994,13 +1254,14 @@ function renderGameList(keyword=""){
         const div=document.createElement("div");
         div.className="suggestion-item";
         div.textContent=`${id} ${name}`;
-        div.addEventListener("mousedown",()=>{
+            div.addEventListener("mousedown",()=>{
             if(!selectedGames.find(g => g.id === id)){
                 selectedGames.push({id,name});
             }
             gameInput.value = "";
             autoSizeGameInput();
             renderSelectedGames();
+            syncTitleGameExclusive();
             gameSuggest.style.display="none";
             updateTitle();
         });
@@ -1010,8 +1271,9 @@ function renderGameList(keyword=""){
     gameSuggest.style.display = matches.length ? "block":"none";
 }
 
-gameInput.addEventListener("focus",()=>renderGameList(""));
+gameInput.addEventListener("focus",()=>{ if(gameInput.disabled) return; renderGameList(""); });
 gameInput.addEventListener("input",()=>{
+    if(gameInput.disabled) return;
     renderGameList(gameInput.value);
 });
 document.addEventListener("click",(e)=>{
@@ -1057,34 +1319,47 @@ function toFullWidthSymbols(str){
 }
 /* --- 標題生成 --- */
 function updateTitle(){
-    const desc=document.getElementById("problem-desc").value.trim();
+    const desc = document.getElementById("problem-desc").value.trim();
     const bugLv = (document.getElementById("bug-level")?.value || "").trim();
     const bugEmoji = bugLv === "高" ? "🔴" : (bugLv === "中" ? "🟠" : (bugLv === "低" ? "🟡" : ""));
+    const serialRaw = (document.getElementById("title-serial")?.value || "").trim();
+    const serial = serialRaw; // 可留空
 
-    let result="";
-
+    // core：遊戲名稱（可有可無） + 內容描述
+    let core = "";
     if (selectedGames.length){
         const gamePart = selectedGames.map(g => {
             const id = g.id.replace('Game','');
             return `${id}_${g.name}`;
         }).join("、");
 
-        result = desc ? `${gamePart}_${desc}` : gamePart;
+        core = desc ? `${gamePart}_${desc}` : gamePart;
     } else if (desc){
-        result = desc;
+        core = desc;
     }
 
-    // BUG 等級用 emoji 放在標題最前方（不單獨輸出一行）
-    if (bugEmoji) {
-        result = result ? `${bugEmoji} ${result}` : bugEmoji;
+    // 目標輸出：顏色EMOJI +（可選）序號 + '.' + core
+    // 範例：🟠 12.非核心流程中斷，但會造成大範圍使用影響
+    let result = "";
+
+    if (bugEmoji) result += bugEmoji;
+    if (serial){
+        // 有序號：與前方 emoji 用一個空白分隔（如果有 emoji）
+        result += (bugEmoji ? " " : "") + serial + (core ? "." + core : ".");
+    } else {
+        // 無序號：只接 core（若前方有 emoji，與 core 用一個空白分隔）
+        if (core) result += (bugEmoji ? " " : "") + core;
     }
 
     const __titleFW = toFullWidthSymbols(result);
     document.getElementById("title-preview").value = __titleFW;
     updateFullPreview();
 }
+
+
 document.getElementById("problem-desc").addEventListener("input",updateTitle);
 document.getElementById("bug-level").addEventListener("change",updateTitle);
+document.getElementById("title-serial").addEventListener("input",updateTitle);
 
 /* --- 智能 OS 補字首 --- */
 function formatOS(prefix, value){
@@ -2146,9 +2421,459 @@ function renderSiteConfigBlocks(){
     });
 }
 
+
+/* ===================== 暫存 / 存檔（localStorage） ===================== */
+const LS_DRAFT_KEY = "task_report_draft_v1";
+const LS_SAVES_KEY = "task_report_saves_v1";
+const SS_SUPPRESS_DRAFT_BANNER_KEY = "task_report_draft_banner_suppress_v1";
+let __skipNextAutosave = false;
+
+function _nowTs(){ return Date.now(); }
+function _fmtTime(ts){
+    try{
+        const d = new Date(ts);
+        const pad = (n)=> String(n).padStart(2,"0");
+        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }catch(e){ return ""; }
+}
+
+function collectState(){
+    // ✅ 先把站別版本從 DOM 同步回 siteConfigs
+    try{ syncSiteVersionsFromDOM(); }catch(e){}
+
+    const inputs = {};
+    document.querySelectorAll("input, select, textarea").forEach(el=>{
+        const key = el.id || el.name;
+        if(!key) return;
+        const t = (el.type || "").toLowerCase();
+        if(t === "checkbox" || t === "radio"){
+            inputs[key] = !!el.checked;
+        }else{
+            inputs[key] = el.value;
+        }
+    });
+
+    const editors = {};
+    document.querySelectorAll('[contenteditable="true"][id]').forEach(el=>{
+        editors[el.id] = el.innerText;
+    });
+
+    return {
+        v: 1,
+        savedAt: _nowTs(),
+        inputs,
+        editors,
+        selectedGames: (Array.isArray(selectedGames) ? selectedGames : []),
+        selectedSites: (Array.isArray(window.selectedSites) ? window.selectedSites : []),
+        siteConfigs: (window.siteConfigs || {})
+    };
+}
+
+function applyState(state){
+    if(!state) return;
+
+    // 避免套用 state 時觸發「未存檔提示」或 dirty 標記
+    window.__applyingState = true;
+    try{
+        // 先處理動態區塊（遊戲/站別）→ 讓後續 input 值能套用到已生成的 DOM
+        if(Array.isArray(state.selectedGames)){
+            selectedGames = state.selectedGames;
+            try{ renderSelectedGames(); }catch(e){}
+        }
+
+        if(Array.isArray(state.selectedSites)){
+            window.selectedSites = state.selectedSites;
+        }
+        if(state.siteConfigs){
+            window.siteConfigs = state.siteConfigs;
+        }
+        try{
+            renderSelectedSites();
+            renderSiteConfigBlocks();
+        }catch(e){}
+
+        // input/select/textarea
+        if(state.inputs){
+            Object.keys(state.inputs).forEach(key=>{
+                let el = document.getElementById(key);
+                if(!el){
+                    const esc = (window.CSS && CSS.escape) ? CSS.escape(key) : String(key).replace(/"/g,'\"');
+                    el = document.querySelector(`[name="${esc}"]`);
+                }
+                if(!el) return;
+                const t = (el.type || "").toLowerCase();
+                if(t === "checkbox" || t === "radio"){
+                    el.checked = !!state.inputs[key];
+                }else{
+                    el.value = (state.inputs[key] ?? "");
+                }
+            });
+        }
+
+        // contenteditable
+        if(state.editors){
+            Object.keys(state.editors).forEach(id=>{
+                const el = document.getElementById(id);
+                if(el && el.getAttribute("contenteditable") === "true"){
+                    el.innerText = (state.editors[id] ?? "");
+                }
+            });
+        }
+
+        // refresh previews
+        try{ syncTitleGameExclusive(); }catch(e){}
+        try{ updateTitle(); }catch(e){}
+        try{ updateFullPreview(); }catch(e){}
+    }finally{
+        window.__applyingState = false;
+    }
+
+    // 套用完成後視為「目前狀態已同步」
+    try{ setDirty(false); }catch(e){}
+}
+
+
+/* ---------- 未存檔提示（dirty / 是否有內容） ---------- */
+window.__dirty = false;
+window.__applyingState = false;
+
+function setDirty(v){
+    window.__dirty = !!v;
+}
+
+function hasMeaningfulContent(){
+    try{
+        const st = collectState();
+        if(Array.isArray(st.selectedGames) && st.selectedGames.length) return true;
+        if(Array.isArray(st.selectedSites) && st.selectedSites.length) return true;
+
+        if(st.editors){
+            for(const k in st.editors){
+                if((st.editors[k] || "").trim()) return true;
+            }
+        }
+        if(st.inputs){
+            for(const k in st.inputs){
+                const v = st.inputs[k];
+                if(typeof v === "boolean"){
+                    if(v) return true;
+                }else{
+                    if(v != null && String(v).trim() !== "") return true;
+                }
+            }
+        }
+    }catch(e){}
+    return false;
+}
+
+// 只做「未存檔判斷」用，不做即時暫存：
+// 任何輸入行為都標記 dirty（套用 state 時不標記）
+document.addEventListener("input", ()=>{
+    if(window.__applyingState) return;
+    setDirty(true);
+    try{ sessionStorage.removeItem(SS_SUPPRESS_DRAFT_BANNER_KEY); }catch(e){}
+}, true);
+document.addEventListener("change", ()=>{
+    if(window.__applyingState) return;
+    setDirty(true);
+    try{ sessionStorage.removeItem(SS_SUPPRESS_DRAFT_BANNER_KEY); }catch(e){}
+}, true);
+
+/* ---------- Draft (auto) ---------- */
+
+function saveDraftNow(){
+    try{
+        // 不要用「空內容」覆蓋既有暫存（例如使用者點了忽略就直接關閉）
+        if(!hasMeaningfulContent()) return;
+
+        const payload = { v: 1, t: _nowTs(), state: collectState() };
+        localStorage.setItem(LS_DRAFT_KEY, JSON.stringify(payload));
+        refreshDraftUI();
+    }catch(e){}
+}
+
+
+function getDraft(){
+    try{
+        const raw = localStorage.getItem(LS_DRAFT_KEY);
+        if(!raw) return null;
+        return JSON.parse(raw);
+    }catch(e){ return null; }
+}
+
+function clearDraft(){
+    try{ localStorage.removeItem(LS_DRAFT_KEY); }catch(e){}
+    refreshDraftUI();
+}
+
+function loadDraft(){
+    const d = getDraft();
+    if(d && d.state){
+        applyState(d.state);
+        try{ setDirty(false); }catch(e){}
+        // 載入後：自動關閉提示並刪除暫存（只保留最新一次暫存）
+        clearDraft();
+        try{ sessionStorage.removeItem(SS_SUPPRESS_DRAFT_BANNER_KEY); }catch(e){}
+    }
+}
+
+/* ---------- Saves (multiple) ---------- */
+function getSaves(){
+    try{
+        const raw = localStorage.getItem(LS_SAVES_KEY);
+        if(!raw) return [];
+        const arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr : [];
+    }catch(e){ return []; }
+}
+function setSaves(arr){
+    try{ localStorage.setItem(LS_SAVES_KEY, JSON.stringify(arr)); }catch(e){}
+}
+
+function _makeId(){
+    try{
+        if(window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    }catch(e){}
+    return String(Date.now()) + "_" + Math.random().toString(16).slice(2);
+}
+
+function createSave(name){
+    const n = (name || "").trim() || `未命名存檔 ${_fmtTime(_nowTs())}`;
+    const arr = getSaves();
+    arr.unshift({
+        id: _makeId(),
+        name: n,
+        createdAt: _nowTs(),
+        updatedAt: _nowTs(),
+        state: collectState()
+    });
+    setSaves(arr);
+    try{ setDirty(false); }catch(e){}
+    renderSaveList();
+    try{ refreshDraftUI(); }catch(e){}
+}
+
+function overwriteSave(id){
+    const arr = getSaves();
+    const s = arr.find(x=>x.id===id);
+    if(!s) return;
+    s.updatedAt = _nowTs();
+    s.state = collectState();
+    setSaves(arr);
+    try{ setDirty(false); }catch(e){}
+    renderSaveList();
+    try{ refreshDraftUI(); }catch(e){}
+}
+
+function deleteSave(id){
+    const arr = getSaves().filter(x=>x.id!==id);
+    setSaves(arr);
+    renderSaveList();
+    try{ refreshDraftUI(); }catch(e){}
+}
+
+function loadSave(id){
+    const arr = getSaves();
+    const s = arr.find(x=>x.id===id);
+    if(!s) return;
+    applyState(s.state);
+    closeSaveModal();
+    try{ setDirty(false); }catch(e){}
+}
+
+function renameSave(id, newName){
+    const n = (newName || "").trim();
+    if(!n) return;
+    const arr = getSaves();
+    const s = arr.find(x=>x.id===id);
+    if(!s) return;
+    s.name = n;
+    s.updatedAt = _nowTs();
+    setSaves(arr);
+    renderSaveList();
+}
+
+/* ---------- UI ---------- */
+function openSaveModal(){
+    const overlay = document.getElementById("save-modal-overlay");
+    if(!overlay) return;
+    overlay.style.display = "flex";
+    overlay.setAttribute("aria-hidden","false");
+    renderSaveList();
+    refreshDraftUI();
+}
+
+function closeSaveModal(){
+    const overlay = document.getElementById("save-modal-overlay");
+    if(!overlay) return;
+    overlay.style.display = "none";
+    overlay.setAttribute("aria-hidden","true");
+}
+
+function renderSaveList(){
+    const host = document.getElementById("save-list");
+    if(!host) return;
+    host.innerHTML = "";
+
+    const arr = getSaves();
+    if(!arr.length){
+        const empty = document.createElement("div");
+        empty.className = "muted";
+        empty.textContent = "尚無存檔。";
+        host.appendChild(empty);
+        return;
+    }
+
+    arr.forEach(s=>{
+        const item = document.createElement("div");
+        item.className = "save-item";
+
+        const meta = document.createElement("div");
+        meta.className = "save-meta";
+
+        const name = document.createElement("div");
+        name.className = "save-name";
+        name.contentEditable = "true";
+        name.spellcheck = false;
+        name.textContent = s.name || "未命名存檔";
+        name.addEventListener("blur", ()=>{
+            const val = (name.textContent || "").trim();
+            if(val && val !== s.name) renameSave(s.id, val);
+            else name.textContent = s.name || "未命名存檔";
+        });
+
+        const time = document.createElement("div");
+        time.className = "save-time";
+        const created = s.createdAt ? _fmtTime(s.createdAt) : "-";
+        const updated = s.updatedAt ? _fmtTime(s.updatedAt) : "-";
+        time.textContent = `建立：${created}　｜　更新：${updated}`;
+
+        meta.appendChild(name);
+        meta.appendChild(time);
+
+        const actions = document.createElement("div");
+        actions.className = "save-actions";
+
+        const btnLoad = document.createElement("button");
+        btnLoad.textContent = "讀取";
+        btnLoad.addEventListener("click", ()=> loadSave(s.id));
+
+        const btnOverwrite = document.createElement("button");
+        btnOverwrite.textContent = "覆蓋";
+        btnOverwrite.className = "gray";
+        btnOverwrite.addEventListener("click", ()=> overwriteSave(s.id));
+
+        const btnDel = document.createElement("button");
+        btnDel.textContent = "刪除";
+        btnDel.className = "danger";
+        btnDel.addEventListener("click", ()=> deleteSave(s.id));
+
+        actions.appendChild(btnLoad);
+        actions.appendChild(btnOverwrite);
+        actions.appendChild(btnDel);
+
+        item.appendChild(meta);
+        item.appendChild(actions);
+        host.appendChild(item);
+    });
+}
+
+function refreshDraftUI(){
+    const d = getDraft();
+    const banner = document.getElementById("draft-banner");
+    const bannerTime = document.getElementById("draft-banner-time");
+    const status = document.getElementById("draft-status");
+
+    const hasDraft = !!(d && d.state);
+    const t = d && (d.t || d.state?.savedAt);
+
+    if(banner){
+        const hasAnySave = (getSaves().length > 0);
+        const suppressed = (function(){ try{ return sessionStorage.getItem(SS_SUPPRESS_DRAFT_BANNER_KEY)==="1"; }catch(e){ return false; } })();
+        // 只在「沒有任何存檔」且未被使用者忽略/清除提示時才顯示暫存提示
+        banner.style.display = (hasDraft && !hasAnySave && !suppressed) ? "flex" : "none";
+    }
+    if(bannerTime){
+        bannerTime.textContent = hasDraft ? `（${_fmtTime(t || _nowTs())}）` : "";
+    }
+    if(status){
+        status.textContent = hasDraft ? `已存在暫存（${_fmtTime(t || _nowTs())}）。` : "尚未建立暫存。";
+    }
+}
+
+/* --- 初始化 --- */
+
 /* --- 初始化 --- */
 window.addEventListener("DOMContentLoaded",()=>{
     setToday();
+
+    /* --- 暫存 / 存檔：事件綁定 --- */
+
+    // 關閉/離開分頁時：寫入「最新一次暫存」；若「未存檔」且已有內容 → 顯示離開提示
+    window.addEventListener("beforeunload", (e)=>{
+        try{
+            const hasAnySave = (getSaves().length > 0);
+            if(!hasAnySave && hasMeaningfulContent()){
+                e.preventDefault();
+                e.returnValue = "";
+            }
+        }catch(err){}
+        if(__skipNextAutosave){ __skipNextAutosave = false; return; }
+        saveDraftNow();
+    });
+
+    // 某些瀏覽器/行為只會觸發 pagehide（例如 BFCache、手機切換）
+    window.addEventListener("pagehide", ()=>{
+        if(__skipNextAutosave){ __skipNextAutosave = false; return; }
+        saveDraftNow();
+    });
+
+    // Banner buttons
+    const _loadDraftBtn = document.getElementById("load-draft-btn");
+    const _discardDraftBtn = document.getElementById("discard-draft-btn");
+    if(_loadDraftBtn) _loadDraftBtn.addEventListener("click", ()=>{
+        loadDraft();
+    });
+    if(_discardDraftBtn) _discardDraftBtn.addEventListener("click", ()=>{
+        // 忽略：本次重新整理/離開不再跳提示，且不顯示暫存提示，直到使用者再次修改內容
+        try{ sessionStorage.setItem(SS_SUPPRESS_DRAFT_BANNER_KEY, "1"); }catch(e){}
+        __skipNextAutosave = true;
+        const banner = document.getElementById("draft-banner");
+        if(banner) banner.style.display = "none";
+    });
+
+    // Modal open/close
+    const openBtn = document.getElementById("open-save-modal-btn");
+    const closeBtn = document.getElementById("close-save-modal-btn");
+    const overlay = document.getElementById("save-modal-overlay");
+    if(openBtn) openBtn.addEventListener("click", openSaveModal);
+    if(closeBtn) closeBtn.addEventListener("click", closeSaveModal);
+    if(overlay) overlay.addEventListener("mousedown", (e)=>{
+        if(e.target === overlay) closeSaveModal();
+    });
+
+    // Modal draft controls
+    const loadDraftBtn2 = document.getElementById("load-draft-btn-2");
+    const clearDraftBtn = document.getElementById("clear-draft-btn");
+    if(loadDraftBtn2) loadDraftBtn2.addEventListener("click", loadDraft);
+    if(clearDraftBtn) clearDraftBtn.addEventListener("click", ()=>{
+        clearDraft();
+        // 清除暫存後：本次重新整理/離開不再重建暫存提示，直到使用者再次修改內容
+        try{ sessionStorage.setItem(SS_SUPPRESS_DRAFT_BANNER_KEY, "1"); }catch(e){}
+        __skipNextAutosave = true;
+    });
+
+    // Modal save controls
+    const createSaveBtn = document.getElementById("create-save-btn");
+    const saveNameInput = document.getElementById("save-name-input");
+    if(createSaveBtn) createSaveBtn.addEventListener("click", ()=>{
+        createSave(saveNameInput ? saveNameInput.value : "");
+        if(saveNameInput) saveNameInput.value = "";
+    });
+
+    // 初次載入：如果有暫存，就顯示提示 banner / 更新狀態
+    refreshDraftUI();
+
 
     // 自動同步 iOS OS 版本到 Safari 欄位
     document.getElementById("ios-os").addEventListener("input", () => {
