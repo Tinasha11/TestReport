@@ -1117,16 +1117,25 @@ function updateAuthUI(user){
   const statusEl = document.getElementById("auth-status");
   const loginBtn = document.getElementById("login-btn");
   const logoutBtn = document.getElementById("logout-btn");
+  const saveBtn = document.getElementById("open-save-modal-btn");
   if(!statusEl || !loginBtn || !logoutBtn) return;
 
   if(user){
     statusEl.textContent = `已登入：${user.displayName || user.email || user.uid}`;
     loginBtn.style.display = "none";
     logoutBtn.style.display = "inline-block";
+    if(saveBtn){
+      saveBtn.disabled = false;
+      saveBtn.title = "";
+    }
   }else{
     statusEl.textContent = "未登入";
     loginBtn.style.display = "inline-block";
     logoutBtn.style.display = "none";
+    if(saveBtn){
+      saveBtn.disabled = true;
+      saveBtn.title = "請先使用 Google 登入後再使用存檔功能";
+    }
   }
 }
 
@@ -2832,6 +2841,10 @@ function renameSave(id, newName){
 
 /* ---------- UI ---------- */
 function openSaveModal(){
+    if(!currentUser){
+        alert("請先使用右上角的「Google 登入」後，才能使用存檔／讀檔功能。");
+        return;
+    }
     const overlay = document.getElementById("save-modal-overlay");
     if(!overlay) return;
     overlay.style.display = "flex";
