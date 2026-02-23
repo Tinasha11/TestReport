@@ -2730,18 +2730,29 @@ function hasMeaningfulContent(){
     return false;
 }
 
-// 只做「未存檔判斷」用，不做即時暫存：
-// 任何輸入行為都標記 dirty（套用 state 時不標記）
+// 只做「未存檔判斷」用，並在編輯時 debounce 寫入救援快照（專為當機/斷電等非預期關閉）
+let __rescueSaveTimer = null;
+function scheduleRescueSave(){
+    if(__rescueSaveTimer){
+        clearTimeout(__rescueSaveTimer);
+        __rescueSaveTimer = null;
+    }
+    if(!hasMeaningfulContent()) return;
+    __rescueSaveTimer = setTimeout(() => {
+        saveRescueSnapshot();
+    }, 5000);  // 5 秒無操作後寫入救援快照，供非預期關閉時恢復
+}
+
 document.addEventListener("input", ()=>{
     if(window.__applyingState) return;
     setDirty(true);
+    scheduleRescueSave();
 }, true);
 document.addEventListener("change", ()=>{
     if(window.__applyingState) return;
     setDirty(true);
+    scheduleRescueSave();
 }, true);
-
-/* ---------- 自動暫存已移除；改以關閉提示避免誤關 ---------- */
 
 /* ---------- Saves (multiple) ---------- */
 function getSaves(){
@@ -2775,6 +2786,7 @@ function createSave(name){
     });
     setSaves(arr);
     try{ setDirty(false); }catch(e){}
+    clearRescueSnapshot();  // 已手動存檔，清除過去的救援快照，下次不再提示
     renderSaveList();
     try{ refreshDraftUI(); }catch(e){}
     saveUserStateToCloud();
@@ -2788,6 +2800,7 @@ function overwriteSave(id){
     s.state = collectState();
     setSaves(arr);
     try{ setDirty(false); }catch(e){}
+    clearRescueSnapshot();  // 已手動覆蓋存檔，清除過去的救援快照
     renderSaveList();
     try{ refreshDraftUI(); }catch(e){}
     saveUserStateToCloud();
@@ -2808,6 +2821,8 @@ function loadSave(id){
     applyState(s.state);
     closeSaveModal();
     try{ setDirty(false); }catch(e){}
+    clearRescueSnapshot();  // 讀取存檔後，過去的救援快照不再需要
+    try{ refreshDraftUI(); }catch(e){}
 }
 
 function renameSave(id, newName){
@@ -2961,11 +2976,12 @@ window.addEventListener("DOMContentLoaded",()=>{
     /* --- 暫存 / 存檔：事件綁定 --- */
 
     // 關閉/離開分頁時：
-    // 只要目前有「尚未寫入存檔的變更」（dirty=true）且表單有實際內容，就跳出提示，並寫入本機救援暫存
+    // 若有未儲存變更 → 跳出提示，且「清除」救援快照（使用者手動關閉，不保留）
+    // 唯有當機/斷電等非預期關閉時，beforeunload/pagehide 可能不執行，上次 debounce 的救援快照才會留下
     window.addEventListener("beforeunload", (e)=>{
         try{
+            clearRescueSnapshot();  // 手動關閉前一律清除，避免下次誤提示
             if(window.__dirty && hasMeaningfulContent()){
-                saveRescueSnapshot();
                 e.preventDefault();
                 e.returnValue = "";
             }
@@ -2973,13 +2989,9 @@ window.addEventListener("DOMContentLoaded",()=>{
         if(__skipNextAutosave){ __skipNextAutosave = false; return; }
     });
 
-    // 某些瀏覽器/行為只會觸發 pagehide（例如 BFCache、手機切換）：
-    // 這裡也寫入一次救援暫存，以應付非正常關閉或當機
     window.addEventListener("pagehide", ()=>{
         if(__skipNextAutosave){ __skipNextAutosave = false; return; }
-        if(window.__dirty && hasMeaningfulContent()){
-            saveRescueSnapshot();
-        }
+        clearRescueSnapshot();  // 分頁關閉時清除，不保留救援快照
     });
 
     // Modal open/close
