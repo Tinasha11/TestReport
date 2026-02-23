@@ -836,6 +836,11 @@ select option[disabled]{display:none;}
 </head>
 <body autocomplete="off">
 <div class="container">
+<div id="auth-bar" style="display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-bottom:8px;font-size:0.9rem;">
+  <span id="auth-status">未登入</span>
+  <button id="login-btn" type="button" style="padding:4px 10px;border-radius:999px;border:1px solid #4a90e2;background:#fff;color:#4a90e2;cursor:pointer;">Google 登入</button>
+  <button id="logout-btn" type="button" style="display:none;padding:4px 10px;border-radius:999px;border:1px solid #d64545;background:#fff;color:#d64545;cursor:pointer;">登出</button>
+</div>
 <div id="draft-banner" class="banner">
   <div>
     <strong>偵測到上次未送出的暫存。</strong>
@@ -1076,9 +1081,15 @@ select option[disabled]{display:none;}
 <!-- ===================== JS ======================= -->
 <script type="module">
 
-// ===== Firebase 設定（請填入你自己的 firebaseConfig） =====
+// ===== Firebase 設定（使用你的 firebaseConfig） =====
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { 
+  getAuth, 
+  onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { 
   getFirestore, 
   doc, setDoc, getDoc, 
@@ -1086,12 +1097,13 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "請填入你的APIKEY",
-  authDomain: "請填入你的AUTHDOMAIN",
-  projectId: "請填入你的PROJECTID",
-  storageBucket: "請填入你的STORAGEBUCKET",
-  messagingSenderId: "請填入你的MESSAGINGSENDERID",
-  appId: "請填入你的APPID"
+  apiKey: "AIzaSyBMsLXfGleteQOzbO9vK590nGUPMO50wTo",
+  authDomain: "index-database-6bccd.firebaseapp.com",
+  projectId: "index-database-6bccd",
+  storageBucket: "index-database-6bccd.firebasestorage.app",
+  messagingSenderId: "1058660136532",
+  appId: "1:1058660136532:web:ea922b93e996517a6c5fc1",
+  measurementId: "G-F9NE2NDBVD"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -1099,13 +1111,97 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let currentUser = null;
+const googleProvider = new GoogleAuthProvider();
+
+function updateAuthUI(user){
+  const statusEl = document.getElementById("auth-status");
+  const loginBtn = document.getElementById("login-btn");
+  const logoutBtn = document.getElementById("logout-btn");
+  if(!statusEl || !loginBtn || !logoutBtn) return;
+
+  if(user){
+    statusEl.textContent = `已登入：${user.displayName || user.email || user.uid}`;
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "inline-block";
+  }else{
+    statusEl.textContent = "未登入";
+    loginBtn.style.display = "inline-block";
+    logoutBtn.style.display = "none";
+  }
+}
+
+async function signInWithGoogle(){
+  try{
+    await signInWithPopup(auth, googleProvider);
+    // onAuthStateChanged 會自動處理後續 UI 與雲端同步
+  }catch(e){
+    console.error(e);
+    alert("Google 登入失敗，請稍後再試。\n" + (e.message || ""));
+  }
+}
+
+async function signOutUser(){
+  try{
+    await signOut(auth);
+  }catch(e){
+    console.error(e);
+    alert("登出失敗，請稍後再試。\n" + (e.message || ""));
+  }
+}
+
+// 將本機暫存與存檔同步到雲端（登入狀態下才會執行）
+async function saveUserStateToCloud(){
+  if(!currentUser) return;
+  try{
+    const draft = getDraft();
+    const saves = getSaves();
+    const payload = {
+      draft: draft || null,
+      saves: Array.isArray(saves) ? saves : [],
+      updatedAt: Date.now()
+    };
+    const ref = doc(db, "userStates", currentUser.uid);
+    await setDoc(ref, payload, { merge: true });
+  }catch(e){
+    console.error("同步到雲端失敗", e);
+  }
+}
+
+// 從雲端載入暫存與存檔到本機（登入後自動執行一次）
+async function loadUserStateFromCloud(){
+  if(!currentUser) return;
+  try{
+    const ref = doc(db, "userStates", currentUser.uid);
+    const snap = await getDoc(ref);
+    if(!snap.exists()) return;
+    const data = snap.data() || {};
+
+    if(data.draft){
+      try{
+        localStorage.setItem(LS_DRAFT_KEY, JSON.stringify(data.draft));
+      }catch(e){}
+    }
+    if(Array.isArray(data.saves)){
+      try{
+        localStorage.setItem(LS_SAVES_KEY, JSON.stringify(data.saves));
+      }catch(e){}
+    }
+
+    try{
+      refreshDraftUI();
+      renderSaveList();
+    }catch(e){}
+  }catch(e){
+    console.error("從雲端載入狀態失敗", e);
+  }
+}
 
 onAuthStateChanged(auth, (user) => {
-  if (user) {
-    currentUser = user;
-    console.log("登入成功", user.uid);
-  } else {
-    currentUser = null;
+  currentUser = user || null;
+  console.log("Auth state changed:", currentUser ? currentUser.uid : "signed out");
+  updateAuthUI(currentUser);
+  if(currentUser){
+    loadUserStateFromCloud();
   }
 });
 // ===== Firebase 設定結束 =====
@@ -2624,6 +2720,8 @@ function saveDraftNow(){
         const payload = { v: 1, t: _nowTs(), state: collectState() };
         localStorage.setItem(LS_DRAFT_KEY, JSON.stringify(payload));
         refreshDraftUI();
+        // 雲端同步（若已登入）
+        saveUserStateToCloud();
     }catch(e){}
 }
 
@@ -2639,6 +2737,7 @@ function getDraft(){
 function clearDraft(){
     try{ localStorage.removeItem(LS_DRAFT_KEY); }catch(e){}
     refreshDraftUI();
+    saveUserStateToCloud();
 }
 
 function loadDraft(){
@@ -2686,6 +2785,7 @@ function createSave(name){
     try{ setDirty(false); }catch(e){}
     renderSaveList();
     try{ refreshDraftUI(); }catch(e){}
+    saveUserStateToCloud();
 }
 
 function overwriteSave(id){
@@ -2698,6 +2798,7 @@ function overwriteSave(id){
     try{ setDirty(false); }catch(e){}
     renderSaveList();
     try{ refreshDraftUI(); }catch(e){}
+    saveUserStateToCloud();
 }
 
 function deleteSave(id){
@@ -2705,6 +2806,7 @@ function deleteSave(id){
     setSaves(arr);
     renderSaveList();
     try{ refreshDraftUI(); }catch(e){}
+    saveUserStateToCloud();
 }
 
 function loadSave(id){
