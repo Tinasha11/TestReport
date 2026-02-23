@@ -2900,17 +2900,29 @@ function renderSaveList(){
 
         const btnLoad = document.createElement("button");
         btnLoad.textContent = "讀取";
-        btnLoad.addEventListener("click", ()=> loadSave(s.id));
+        btnLoad.addEventListener("click", ()=>{
+            if(confirm(`確定要讀取「${(s.name || "未命名存檔").replace(/"/g, "＂")}」？目前的編輯內容將會被取代。`)){
+                loadSave(s.id);
+            }
+        });
 
         const btnOverwrite = document.createElement("button");
         btnOverwrite.textContent = "覆蓋";
         btnOverwrite.className = "gray";
-        btnOverwrite.addEventListener("click", ()=> overwriteSave(s.id));
+        btnOverwrite.addEventListener("click", ()=>{
+            if(confirm(`確定要用目前的內容覆蓋「${(s.name || "未命名存檔").replace(/"/g, "＂")}」？原本的內容將無法復原。`)){
+                overwriteSave(s.id);
+            }
+        });
 
         const btnDel = document.createElement("button");
         btnDel.textContent = "刪除";
         btnDel.className = "danger";
-        btnDel.addEventListener("click", ()=> deleteSave(s.id));
+        btnDel.addEventListener("click", ()=>{
+            if(confirm(`確定要刪除「${(s.name || "未命名存檔").replace(/"/g, "＂")}」？此操作無法復原。`)){
+                deleteSave(s.id);
+            }
+        });
 
         actions.appendChild(btnLoad);
         actions.appendChild(btnOverwrite);
