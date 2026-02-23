@@ -3008,6 +3008,20 @@ window.addEventListener("DOMContentLoaded",()=>{
         if(saveNameInput) saveNameInput.value = "";
     });
 
+    // Firebase Auth 登入 / 登出按鈕事件
+    const loginBtn = document.getElementById("login-btn");
+    const logoutBtn = document.getElementById("logout-btn");
+    if(loginBtn){
+        loginBtn.addEventListener("click", () => {
+            signInWithGoogle();
+        });
+    }
+    if(logoutBtn){
+        logoutBtn.addEventListener("click", () => {
+            signOutUser();
+        });
+    }
+
     // 初次載入：如果有暫存，就顯示提示 banner / 更新狀態
     refreshDraftUI();
 
