@@ -1177,14 +1177,12 @@ async function loadUserStateFromCloud(){
   try{
     const ref = doc(db, "userStates", currentUser.uid);
     const snap = await getDoc(ref);
-    if(!snap.exists()) return;
-    const data = snap.data() || {};
-
-    if(Array.isArray(data.saves)){
-      try{
-        localStorage.setItem(LS_SAVES_KEY, JSON.stringify(data.saves));
-      }catch(e){}
-    }
+    const saves = (snap.exists() && Array.isArray(snap.data()?.saves))
+      ? snap.data().saves
+      : [];
+    try{
+      localStorage.setItem(LS_SAVES_KEY, JSON.stringify(saves));
+    }catch(e){}
 
     try{
       refreshDraftUI();
@@ -1206,13 +1204,11 @@ function startUserStateRealtimeListener(){
 
   const ref = doc(db, "userStates", currentUser.uid);
   userStateUnsub = onSnapshot(ref, (snap) => {
-    if(!snap.exists()) return;
-    const data = snap.data() || {};
-
+    const saves = (snap.exists() && Array.isArray(snap.data()?.saves))
+      ? snap.data().saves
+      : [];
     try{
-      if(Array.isArray(data.saves)){
-        localStorage.setItem(LS_SAVES_KEY, JSON.stringify(data.saves));
-      }
+      localStorage.setItem(LS_SAVES_KEY, JSON.stringify(saves));
     }catch(e){}
 
     try{
