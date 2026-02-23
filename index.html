@@ -231,6 +231,13 @@
             transition: 0.2s ease-in-out;
         }
 
+        .button-row button:disabled {
+            background-color: #b0b0b0;
+            border-color: #b0b0b0;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
         .button-row button:hover {
             background-color: #357bd8;
         }
@@ -1037,7 +1044,7 @@ select option[disabled]{display:none;}
 <div class="button-row">
 <button id="copy-title-btn">複製標題</button>
 <button id="copy-btn">一鍵複製</button>
-<button id="open-save-modal-btn">存檔／讀檔</button>
+<button id="open-save-modal-btn" disabled>存檔／讀檔</button>
 </div>
 <!-- 預覽 -->
 <div class="section">
@@ -2841,10 +2848,6 @@ function renameSave(id, newName){
 
 /* ---------- UI ---------- */
 function openSaveModal(){
-    if(!currentUser){
-        alert("請先使用右上角的「Google 登入」後，才能使用存檔／讀檔功能。");
-        return;
-    }
     const overlay = document.getElementById("save-modal-overlay");
     if(!overlay) return;
     overlay.style.display = "flex";
