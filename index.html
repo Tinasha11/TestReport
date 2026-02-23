@@ -1099,8 +1099,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { 
   getFirestore, 
-  doc, setDoc, getDoc, 
-  collection, addDoc, getDocs, deleteDoc 
+  doc, setDoc, getDoc, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -1118,6 +1117,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let currentUser = null;
+let userStateUnsub = null;
 const googleProvider = new GoogleAuthProvider();
 
 function updateAuthUI(user){
@@ -1212,12 +1212,50 @@ async function loadUserStateFromCloud(){
   }
 }
 
+// 即時監聽：登入同一帳號的其它裝置有變更時，立即同步到本機
+function startUserStateRealtimeListener(){
+  // 先取消舊的監聽，避免重覆
+  if(userStateUnsub){
+    try{ userStateUnsub(); }catch(e){}
+    userStateUnsub = null;
+  }
+  if(!currentUser) return;
+
+  const ref = doc(db, "userStates", currentUser.uid);
+  userStateUnsub = onSnapshot(ref, (snap) => {
+    if(!snap.exists()) return;
+    const data = snap.data() || {};
+
+    try{
+      if(data.draft){
+        localStorage.setItem(LS_DRAFT_KEY, JSON.stringify(data.draft));
+      }
+      if(Array.isArray(data.saves)){
+        localStorage.setItem(LS_SAVES_KEY, JSON.stringify(data.saves));
+      }
+    }catch(e){}
+
+    try{
+      refreshDraftUI();
+      renderSaveList();
+    }catch(e){}
+  }, (error) => {
+    console.error("即時監聽 userStates 失敗", error);
+  });
+}
+
 onAuthStateChanged(auth, (user) => {
   currentUser = user || null;
   console.log("Auth state changed:", currentUser ? currentUser.uid : "signed out");
   updateAuthUI(currentUser);
   if(currentUser){
     loadUserStateFromCloud();
+    startUserStateRealtimeListener();
+  }else{
+    if(userStateUnsub){
+      try{ userStateUnsub(); }catch(e){}
+      userStateUnsub = null;
+    }
   }
 });
 // ===== Firebase 設定結束 =====
