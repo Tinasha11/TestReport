@@ -848,17 +848,16 @@ select option[disabled]{display:none;}
   <button id="login-btn" type="button" style="padding:4px 10px;border-radius:999px;border:1px solid #4a90e2;background:#fff;color:#4a90e2;cursor:pointer;">Google 登入</button>
   <button id="logout-btn" type="button" style="display:none;padding:4px 10px;border-radius:999px;border:1px solid #d64545;background:#fff;color:#d64545;cursor:pointer;">登出</button>
 </div>
-<div id="draft-banner" class="banner">
+<div id="rescue-banner" class="banner" style="display:none;">
   <div>
-    <strong>偵測到上次未送出的暫存。</strong>
-    <span class="muted" id="draft-banner-time"></span>
+    <strong>偵測到上次未正常關閉的內容。</strong>
+    <span class="muted" id="rescue-banner-time"></span>
   </div>
   <div class="banner-actions">
-    <button id="load-draft-btn">載入暫存</button>
-    <button id="discard-draft-btn" class="secondary">忽略</button>
+    <button id="load-rescue-btn" type="button">載入內容</button>
+    <button id="discard-rescue-btn" type="button" class="secondary">忽略</button>
   </div>
 </div>
-
 <h1>任務回報模板產生器</h1>
 <!-- 任務標題 -->
 <div class="title-section">
@@ -1064,15 +1063,6 @@ select option[disabled]{display:none;}
 
     <div class="save-grid">
       <div class="save-card">
-        <h3>暫存（自動）</h3>
-        <div class="muted" id="draft-status">尚未建立暫存。</div>
-        <div class="save-row" style="margin-top:10px;">
-          <button id="load-draft-btn-2" type="button">載入暫存</button>
-          <button id="clear-draft-btn" class="danger" type="button">清除暫存</button>
-</div>
-      </div>
-
-      <div class="save-card">
         <h3>存檔（可多份）</h3>
         <div class="save-row">
           <input id="save-name-input" type="text" placeholder="輸入存檔名稱（例如：2026-02-03 正式站重現）" />
@@ -1165,14 +1155,12 @@ async function signOutUser(){
   }
 }
 
-// 將本機暫存與存檔同步到雲端（登入狀態下才會執行）
+// 將本機存檔同步到雲端（登入狀態下才會執行）
 async function saveUserStateToCloud(){
   if(!currentUser) return;
   try{
-    const draft = getDraft();
     const saves = getSaves();
     const payload = {
-      draft: draft || null,
       saves: Array.isArray(saves) ? saves : [],
       updatedAt: Date.now()
     };
@@ -1183,7 +1171,7 @@ async function saveUserStateToCloud(){
   }
 }
 
-// 從雲端載入暫存與存檔到本機（登入後自動執行一次）
+// 從雲端載入存檔到本機（登入後自動執行一次）
 async function loadUserStateFromCloud(){
   if(!currentUser) return;
   try{
@@ -1192,11 +1180,6 @@ async function loadUserStateFromCloud(){
     if(!snap.exists()) return;
     const data = snap.data() || {};
 
-    if(data.draft){
-      try{
-        localStorage.setItem(LS_DRAFT_KEY, JSON.stringify(data.draft));
-      }catch(e){}
-    }
     if(Array.isArray(data.saves)){
       try{
         localStorage.setItem(LS_SAVES_KEY, JSON.stringify(data.saves));
@@ -1227,9 +1210,6 @@ function startUserStateRealtimeListener(){
     const data = snap.data() || {};
 
     try{
-      if(data.draft){
-        localStorage.setItem(LS_DRAFT_KEY, JSON.stringify(data.draft));
-      }
       if(Array.isArray(data.saves)){
         localStorage.setItem(LS_SAVES_KEY, JSON.stringify(data.saves));
       }
@@ -2607,10 +2587,9 @@ function renderSiteConfigBlocks(){
 }
 
 
-/* ===================== 暫存 / 存檔（localStorage） ===================== */
-const LS_DRAFT_KEY = "task_report_draft_v1";
+/* ===================== 存檔（localStorage） ===================== */
 const LS_SAVES_KEY = "task_report_saves_v1";
-const SS_SUPPRESS_DRAFT_BANNER_KEY = "task_report_draft_banner_suppress_v1";
+const LS_RESCUE_KEY = "task_report_rescue_v1";
 let __skipNextAutosave = false;
 
 function _nowTs(){ return Date.now(); }
@@ -2756,54 +2735,13 @@ function hasMeaningfulContent(){
 document.addEventListener("input", ()=>{
     if(window.__applyingState) return;
     setDirty(true);
-    try{ sessionStorage.removeItem(SS_SUPPRESS_DRAFT_BANNER_KEY); }catch(e){}
 }, true);
 document.addEventListener("change", ()=>{
     if(window.__applyingState) return;
     setDirty(true);
-    try{ sessionStorage.removeItem(SS_SUPPRESS_DRAFT_BANNER_KEY); }catch(e){}
 }, true);
 
-/* ---------- Draft (auto) ---------- */
-
-function saveDraftNow(){
-    try{
-        // 不要用「空內容」覆蓋既有暫存（例如使用者點了忽略就直接關閉）
-        if(!hasMeaningfulContent()) return;
-
-        const payload = { v: 1, t: _nowTs(), state: collectState() };
-        localStorage.setItem(LS_DRAFT_KEY, JSON.stringify(payload));
-        refreshDraftUI();
-        // 雲端同步（若已登入）
-        saveUserStateToCloud();
-    }catch(e){}
-}
-
-
-function getDraft(){
-    try{
-        const raw = localStorage.getItem(LS_DRAFT_KEY);
-        if(!raw) return null;
-        return JSON.parse(raw);
-    }catch(e){ return null; }
-}
-
-function clearDraft(){
-    try{ localStorage.removeItem(LS_DRAFT_KEY); }catch(e){}
-    refreshDraftUI();
-    saveUserStateToCloud();
-}
-
-function loadDraft(){
-    const d = getDraft();
-    if(d && d.state){
-        applyState(d.state);
-        try{ setDirty(false); }catch(e){}
-        // 載入後：自動關閉提示並刪除暫存（只保留最新一次暫存）
-        clearDraft();
-        try{ sessionStorage.removeItem(SS_SUPPRESS_DRAFT_BANNER_KEY); }catch(e){}
-    }
-}
+/* ---------- 自動暫存已移除；改以關閉提示避免誤關 ---------- */
 
 /* ---------- Saves (multiple) ---------- */
 function getSaves(){
@@ -2969,26 +2907,48 @@ function renderSaveList(){
     });
 }
 
+// 救援暫存：只存在本機，用來處理非正常關閉的補救，不會同步到雲端
+function saveRescueSnapshot(){
+    try{
+        if(!hasMeaningfulContent()) return;
+        const payload = {
+            v: 1,
+            t: _nowTs(),
+            state: collectState()
+        };
+        localStorage.setItem(LS_RESCUE_KEY, JSON.stringify(payload));
+    }catch(e){}
+}
+
+function getRescueSnapshot(){
+    try{
+        const raw = localStorage.getItem(LS_RESCUE_KEY);
+        if(!raw) return null;
+        return JSON.parse(raw);
+    }catch(e){ return null; }
+}
+
+function clearRescueSnapshot(){
+    try{ localStorage.removeItem(LS_RESCUE_KEY); }catch(e){}
+}
+
 function refreshDraftUI(){
-    const d = getDraft();
-    const banner = document.getElementById("draft-banner");
-    const bannerTime = document.getElementById("draft-banner-time");
-    const status = document.getElementById("draft-status");
+    // 這裡只負責顯示／隱藏救援提示
+    const data = getRescueSnapshot();
+    const banner = document.getElementById("rescue-banner");
+    const timeEl = document.getElementById("rescue-banner-time");
+    if(!banner) return;
 
-    const hasDraft = !!(d && d.state);
-    const t = d && (d.t || d.state?.savedAt);
-
-    if(banner){
-        const hasAnySave = (getSaves().length > 0);
-        const suppressed = (function(){ try{ return sessionStorage.getItem(SS_SUPPRESS_DRAFT_BANNER_KEY)==="1"; }catch(e){ return false; } })();
-        // 只在「沒有任何存檔」且未被使用者忽略/清除提示時才顯示暫存提示
-        banner.style.display = (hasDraft && !hasAnySave && !suppressed) ? "flex" : "none";
-    }
-    if(bannerTime){
-        bannerTime.textContent = hasDraft ? `（${_fmtTime(t || _nowTs())}）` : "";
-    }
-    if(status){
-        status.textContent = hasDraft ? `已存在暫存（${_fmtTime(t || _nowTs())}）。` : "尚未建立暫存。";
+    if(data && data.t){
+        banner.style.display = "flex";
+        if(timeEl){
+            timeEl.textContent = `（${_fmtTime(data.t)}）`;
+        }
+    }else{
+        banner.style.display = "none";
+        if(timeEl){
+            timeEl.textContent = "";
+        }
     }
 }
 
@@ -3000,37 +2960,26 @@ window.addEventListener("DOMContentLoaded",()=>{
 
     /* --- 暫存 / 存檔：事件綁定 --- */
 
-    // 關閉/離開分頁時：寫入「最新一次暫存」；若「未存檔」且已有內容 → 顯示離開提示
+    // 關閉/離開分頁時：
+    // 只要目前有「尚未寫入存檔的變更」（dirty=true）且表單有實際內容，就跳出提示，並寫入本機救援暫存
     window.addEventListener("beforeunload", (e)=>{
         try{
-            const hasAnySave = (getSaves().length > 0);
-            if(!hasAnySave && hasMeaningfulContent()){
+            if(window.__dirty && hasMeaningfulContent()){
+                saveRescueSnapshot();
                 e.preventDefault();
                 e.returnValue = "";
             }
         }catch(err){}
         if(__skipNextAutosave){ __skipNextAutosave = false; return; }
-        saveDraftNow();
     });
 
-    // 某些瀏覽器/行為只會觸發 pagehide（例如 BFCache、手機切換）
+    // 某些瀏覽器/行為只會觸發 pagehide（例如 BFCache、手機切換）：
+    // 這裡也寫入一次救援暫存，以應付非正常關閉或當機
     window.addEventListener("pagehide", ()=>{
         if(__skipNextAutosave){ __skipNextAutosave = false; return; }
-        saveDraftNow();
-    });
-
-    // Banner buttons
-    const _loadDraftBtn = document.getElementById("load-draft-btn");
-    const _discardDraftBtn = document.getElementById("discard-draft-btn");
-    if(_loadDraftBtn) _loadDraftBtn.addEventListener("click", ()=>{
-        loadDraft();
-    });
-    if(_discardDraftBtn) _discardDraftBtn.addEventListener("click", ()=>{
-        // 忽略：本次重新整理/離開不再跳提示，且不顯示暫存提示，直到使用者再次修改內容
-        try{ sessionStorage.setItem(SS_SUPPRESS_DRAFT_BANNER_KEY, "1"); }catch(e){}
-        __skipNextAutosave = true;
-        const banner = document.getElementById("draft-banner");
-        if(banner) banner.style.display = "none";
+        if(window.__dirty && hasMeaningfulContent()){
+            saveRescueSnapshot();
+        }
     });
 
     // Modal open/close
@@ -3043,16 +2992,26 @@ window.addEventListener("DOMContentLoaded",()=>{
         if(e.target === overlay) closeSaveModal();
     });
 
-    // Modal draft controls
-    const loadDraftBtn2 = document.getElementById("load-draft-btn-2");
-    const clearDraftBtn = document.getElementById("clear-draft-btn");
-    if(loadDraftBtn2) loadDraftBtn2.addEventListener("click", loadDraft);
-    if(clearDraftBtn) clearDraftBtn.addEventListener("click", ()=>{
-        clearDraft();
-        // 清除暫存後：本次重新整理/離開不再重建暫存提示，直到使用者再次修改內容
-        try{ sessionStorage.setItem(SS_SUPPRESS_DRAFT_BANNER_KEY, "1"); }catch(e){}
-        __skipNextAutosave = true;
-    });
+    // 救援暫存 Banner 按鈕
+    const loadRescueBtn = document.getElementById("load-rescue-btn");
+    const discardRescueBtn = document.getElementById("discard-rescue-btn");
+    if(loadRescueBtn){
+        loadRescueBtn.addEventListener("click", ()=>{
+            const data = getRescueSnapshot();
+            if(data && data.state){
+                applyState(data.state);
+                clearRescueSnapshot();
+                setDirty(false);
+                refreshDraftUI();
+            }
+        });
+    }
+    if(discardRescueBtn){
+        discardRescueBtn.addEventListener("click", ()=>{
+            clearRescueSnapshot();
+            refreshDraftUI();
+        });
+    }
 
     // Modal save controls
     const createSaveBtn = document.getElementById("create-save-btn");
@@ -3076,7 +3035,8 @@ window.addEventListener("DOMContentLoaded",()=>{
         });
     }
 
-    // 初次載入：如果有暫存，就顯示提示 banner / 更新狀態
+    // 初次載入：渲染存檔列表 + 檢查是否有救援暫存
+    renderSaveList();
     refreshDraftUI();
 
 
