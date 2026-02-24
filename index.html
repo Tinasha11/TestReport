@@ -2931,12 +2931,14 @@ function renderSaveList(){
 }
 
 // 救援暫存：只存在本機，用來處理非正常關閉的補救，不會同步到雲端
+// 會記錄 uid，切換帳號時只顯示該帳號自己的救援快照
 function saveRescueSnapshot(){
     try{
         if(!hasMeaningfulContent()) return;
         const payload = {
             v: 1,
             t: _nowTs(),
+            uid: currentUser?.uid ?? null,
             state: collectState()
         };
         localStorage.setItem(LS_RESCUE_KEY, JSON.stringify(payload));
@@ -2956,18 +2958,21 @@ function clearRescueSnapshot(){
 }
 
 function refreshDraftUI(){
-    // 這裡只負責顯示／隱藏救援提示
     const data = getRescueSnapshot();
     const banner = document.getElementById("rescue-banner");
     const timeEl = document.getElementById("rescue-banner-time");
     if(!banner) return;
 
-    if(data && data.t){
+    const myUid = currentUser?.uid ?? null;
+    if(data && data.t && data.uid === myUid){
         banner.style.display = "flex";
         if(timeEl){
             timeEl.textContent = `（${_fmtTime(data.t)}）`;
         }
     }else{
+        if(data && data.uid !== myUid){
+            clearRescueSnapshot();
+        }
         banner.style.display = "none";
         if(timeEl){
             timeEl.textContent = "";
