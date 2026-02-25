@@ -1817,25 +1817,17 @@ if (selectedSitesList.length === 0) {
         lines.push("");
     }
 
-    // 操作 / 實際結果 / 預期結果（保留段落結構，段落間固定空一行）
-    lines.push("操作：");
-    if (op) lines.push(op);
-    lines.push("");
-
-    lines.push("實際結果：");
-    if (act) lines.push(act);
-    lines.push("");
-
-    lines.push("預期結果：");
-    if (exp) lines.push(exp);
-
-    if (remark) {
-        lines.push("");
-        lines.push("備註：");
-        lines.push(remark);
-    }
-
-    document.getElementById("full-preview").value = toFullWidthSymbols(lines.join("\n"));
+    // 操作 / 實際結果 / 預期結果 / 備註（保留段落結構）
+    // 模板與標籤做全形轉換；使用者輸入的內文（op, act, exp, remark）維持原始格式
+    const templatePart = lines.join("\n") + "\n操作：\n";
+    const sep2 = "\n\n實際結果：\n";
+    const sep3 = "\n\n預期結果：\n";
+    const sep4 = remark ? "\n\n備註：\n" : "";
+    const out = toFullWidthSymbols(templatePart) + op
+        + toFullWidthSymbols(sep2) + act
+        + toFullWidthSymbols(sep3) + exp
+        + (remark ? toFullWidthSymbols(sep4) + remark : "");
+    document.getElementById("full-preview").value = out;
 }
 
 /* --- 複製 --- */
