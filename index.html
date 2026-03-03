@@ -167,6 +167,16 @@
             gap: 8px;
         }
 
+        #all-row {
+            grid-template-columns: 120px;
+        }
+
+        /* 裝置選項 disabled 時反灰 */
+        label:has(.device-check:disabled) {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         #pc-row {
             grid-template-columns: 120px 300px;
         }
@@ -969,6 +979,10 @@ select option[disabled]{display:none;}
 <div class="form-row">
 <label>裝置：</label>
 <div class="device-group">
+<!-- ALL -->
+<div class="device-row" id="all-row">
+<label><input class="device-check" id="device-all" type="checkbox" value="ALL"/> ALL</label>
+</div>
 <!-- PC -->
 <div class="device-row" id="pc-row">
 <label><input class="device-check" id="device-pc" type="checkbox" value="PC"/> PC</label>
@@ -1540,10 +1554,41 @@ function formatBrowser(value){
     return `瀏覽器：Chrome ${v}`;
 }
 
+/* --- 同步 iOS 子區塊顯示（供 applyState 呼叫） --- */
+function syncIosBlockVisibility(){
+    const ios = document.getElementById("ios-check");
+    const wrapper = document.getElementById("ios-browser-wrapper");
+    if(ios && wrapper) wrapper.style.display = ios.checked ? "flex" : "none";
+}
+
+/* --- 裝置 ALL 與 PC/Android/iOS 互斥同步（供 applyState 呼叫） --- */
+function syncDeviceAllVsOthers(){
+    const deviceAll = document.getElementById("device-all");
+    const devicePc = document.getElementById("device-pc");
+    const deviceAndroid = document.getElementById("device-android");
+    const iosCheck = document.getElementById("ios-check");
+    if(!deviceAll || !devicePc || !deviceAndroid || !iosCheck) return;
+    const allChecked = deviceAll.checked;
+    [devicePc, deviceAndroid, iosCheck].forEach(chk => {
+        chk.disabled = allChecked;
+        if(allChecked) chk.checked = false;
+    });
+    const anyOtherChecked = [devicePc, deviceAndroid, iosCheck].some(chk => chk.checked);
+    deviceAll.disabled = anyOtherChecked;
+    if(anyOtherChecked) deviceAll.checked = false;
+}
+
 /* --- 裝置資料組裝（回傳每裝置一行字串） --- */
 
 function getDeviceLines(){
     const lines = [];
+
+    const allOn = document.getElementById("device-all").checked;
+    // 選擇 ALL 時僅輸出 ALL
+    if (allOn) {
+        lines.push("ALL");
+        return lines;
+    }
 
     // 去除 formatBrowser() 可能自帶的「瀏覽器：」前綴
     const normBrowser = (s) => (s || "").replace(/^瀏覽器：\s*/, "").trim();
@@ -1806,8 +1851,12 @@ if (selectedSitesList.length === 0) {
 
     const deviceLines = getDeviceLines();
     if (deviceLines.length) {
-        lines.push("裝置：");
-        deviceLines.forEach(l => lines.push(l));
+        if (deviceLines.length === 1 && deviceLines[0] === "ALL") {
+            lines.push("裝置：ALL");
+        } else {
+            lines.push("裝置：");
+            deviceLines.forEach(l => lines.push(l));
+        }
         lines.push("");
     }
 
@@ -2674,6 +2723,8 @@ function applyState(state){
 
         // refresh previews
         try{ syncTitleGameExclusive(); }catch(e){}
+        try{ syncDeviceAllVsOthers(); }catch(e){}
+        try{ syncIosBlockVisibility(); }catch(e){}
         try{ updateTitle(); }catch(e){}
         try{ updateFullPreview(); }catch(e){}
     }finally{
@@ -3073,17 +3124,18 @@ window.addEventListener("DOMContentLoaded",()=>{
     renderSiteConfigBlocks();
 
     // 控制 iOS 子欄位顯示
-    const syncIosBlock = () => {
-        const ios = document.getElementById("ios-check").checked;
-        document.getElementById("ios-browser-wrapper").style.display = ios ? "flex" : "none";
-    };
+    const syncIosBlock = () => syncIosBlockVisibility();
     syncIosBlock();
+
+    // ALL 與 PC/Android/iOS 互斥：選 ALL 時其餘三個反灰不可選
     document.querySelectorAll(".device-check").forEach(chk=>{
         chk.addEventListener("change",()=>{
+            syncDeviceAllVsOthers();
             syncIosBlock();
             updateFullPreview();
         });
     });
+    syncDeviceAllVsOthers();
 
     // iOS 子瀏覽器更新
     document.querySelectorAll(".ios-browser").forEach(chk=>{
