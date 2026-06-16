@@ -1741,37 +1741,46 @@ function updateFullPreview(){
 
     
 // 測試廳主／帳號 & 版本（單站別：不重複站別名；複數站別：站別底下巢狀條列）
-if (selectedSitesList.length === 0) {
-    lines.push("測試廳主／帳號：");
-    lines.push("．-");
-    lines.push("");
-} else if (selectedSitesList.length === 1) {
-    const siteName = selectedSitesList[0];
+// ✅ 新設定：測試廳主／帳號若完全留空，預覽與複製結果都不輸出「測試廳主／帳號：／．-」
+const getHallAccountOutputData = (siteName) => {
     const cfg = normSiteCfg(siteName);
 
-    // 測試廳主／帳號（試玩模式可獨立存在：若沒有一般廳主/帳號，就不輸出 '-'，直接略過該小段）
-    lines.push("測試廳主／帳號：");
+    const pairs = Array.isArray(cfg.pairs)
+        ? cfg.pairs
+            .map(p => ({
+                hall: String((p && p.hall) || "").trim(),
+                account: String((p && p.account) || "").trim()
+            }))
+            .filter(p => p.hall && p.account)
+        : [];
 
-    const pairs = (cfg.pairs && cfg.pairs.length) ? cfg.pairs : [];
-    const trialOn = !!(cfg.trial && cfg.trial.enabled);
+    const trialHalls = (cfg.trial && cfg.trial.enabled && Array.isArray(cfg.trial.halls))
+        ? cfg.trial.halls.map(h => String(h || "").trim()).filter(Boolean)
+        : [];
 
-    if (pairs.length) {
-        lines.push("．廳主／帳號：");
-        pairs.forEach(p => lines.push(`　．${p.hall}／${p.account}`));
+    return { cfg, pairs, trialHalls };
+};
+
+if (selectedSitesList.length === 1) {
+    const siteName = selectedSitesList[0];
+    const { cfg, pairs, trialHalls } = getHallAccountOutputData(siteName);
+
+    // 測試廳主／帳號：只有真的有資料時才輸出整段；空白時不輸出標題與「．-」
+    if (pairs.length || trialHalls.length) {
+        lines.push("測試廳主／帳號：");
+
+        if (pairs.length) {
+            lines.push("．廳主／帳號：");
+            pairs.forEach(p => lines.push(`　．${p.hall}／${p.account}`));
+        }
+
+        if (trialHalls.length) {
+            lines.push("．試玩模式：");
+            trialHalls.forEach(h => lines.push(`　．${h}`));
+        }
+
+        lines.push("");
     }
-
-    if (trialOn) {
-        lines.push("．試玩模式：");
-        const halls = (cfg.trial.halls && cfg.trial.halls.length) ? cfg.trial.halls : [];
-        if (halls.length) halls.forEach(h => lines.push(`　．${h}`));
-        else lines.push("　．-");
-    }
-
-    if (!pairs.length && !trialOn) {
-        lines.push("．-");
-    }
-
-    lines.push("");
 
     // 版本：若此站別沒有勾選任何版本，整段略過（避免「只需要試玩模式」時出現 '-'）
     {
@@ -1790,34 +1799,29 @@ if (selectedSitesList.length === 0) {
             lines.push("");
         }
     }
-} else {
-    // 複數站別：站別底下巢狀條列
-    lines.push("測試廳主／帳號：");
-    selectedSitesList.forEach(siteName => {
-        const cfg = normSiteCfg(siteName);
+} else if (selectedSitesList.length > 1) {
+    // 複數站別：只輸出有填寫廳主／帳號或試玩廳主的站別；空白站別不輸出「．-」
+    const hallAccountSites = selectedSitesList
+        .map(siteName => ({ siteName, ...getHallAccountOutputData(siteName) }))
+        .filter(item => item.pairs.length || item.trialHalls.length);
 
-        lines.push(`．${siteName}：`);
+    if (hallAccountSites.length) {
+        lines.push("測試廳主／帳號：");
+        hallAccountSites.forEach(({ siteName, pairs, trialHalls }) => {
+            lines.push(`．${siteName}：`);
 
-        const pairs = (cfg.pairs && cfg.pairs.length) ? cfg.pairs : [];
-        const trialOn = !!(cfg.trial && cfg.trial.enabled);
+            if (pairs.length) {
+                lines.push("　．廳主／帳號：");
+                pairs.forEach(p => lines.push(`　　．${p.hall}／${p.account}`));
+            }
 
-        if (pairs.length) {
-            lines.push("　．廳主／帳號：");
-            pairs.forEach(p => lines.push(`　　．${p.hall}／${p.account}`));
-        }
-
-        if (trialOn) {
-            lines.push("　．試玩模式：");
-            const halls = (cfg.trial.halls && cfg.trial.halls.length) ? cfg.trial.halls : [];
-            if (halls.length) halls.forEach(h => lines.push(`　　．${h}`));
-            else lines.push("　　．-");
-        }
-
-        if (!pairs.length && !trialOn) {
-            lines.push("　．-");
-        }
-    });
-    lines.push("");
+            if (trialHalls.length) {
+                lines.push("　．試玩模式：");
+                trialHalls.forEach(h => lines.push(`　　．${h}`));
+            }
+        });
+        lines.push("");
+    }
 
     // 版本（複選：僅輸出有勾選版本的站別；若全都沒勾選則整段略過）
     const anySiteHasVersion = selectedSitesList.some(siteName => {
